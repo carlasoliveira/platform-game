@@ -10,31 +10,29 @@ class Player(ObjectDynamic):
         self.animation_frame = 0
         self.gravity = 1
         self.jump_force = -22
+        self.collider_offset = [52, 46]
 
     def update(self, delta_time, game_map):
-        self._velocity[1] += self.gravity * delta_time
+        print("Atualizando jogador: posição Y =", self._position[1])
+        self._velocity[1] += self.gravity
         self._position[1] += self._velocity[1]  * delta_time
-        if Collider.check_collision(self._position, self._size, game_map):
-            self._position[1] -= self._velocity[1] 
+        if Collider.check_collision(self._position, self._size, game_map, offset=self.collider_offset):
+            self._position[1] -= self._velocity[1] * delta_time
             self._velocity[1] = 0
 
     def move(self, keys, game_map):
         moved = False
+
         if keys[pg.K_a]:
-            self._position[0] -= 5
-            if Collider.check_collision(self._position, self._size, game_map):
-                self._position[0] += 5
-            else:
-                self.animation = 3
-                moved = True
-                
+            self._position[0] -= 5   
+            self.animation = 3
+            moved = True
         if keys[pg.K_d]:
             self._position[0] += 5
-            if Collider.check_collision(self._position, self._size, game_map):
-                self._position[0] -= 5
-            else:
-                self.animation = 2
-                moved = True
+            self.animation = 2
+            moved = True
+        if keys[pg.K_w]:
+            self.jump()
 
         if not moved:
             self.animation = 0 if self.animation == 2 else 1
@@ -46,4 +44,12 @@ class Player(ObjectDynamic):
         anims = self.sprites[self.animation]
         index = self.animation_frame // 7 % len(anims)
         surface.blit(anims[index], self._position)
+        offset = (40, 8)
+        collider_rect = pg.Rect(
+            self._position[0] + offset[0],
+            self._position[1] + offset[1],
+            self._size[0],
+            self._size[1]
+        )
+        pg.draw.rect(surface, (255, 0, 0), collider_rect, 2)
         self.animation_frame = (self.animation_frame + 1) % (len(anims) * 7)
