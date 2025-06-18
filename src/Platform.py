@@ -30,7 +30,7 @@ class Platform(ObjectStatic):
             int(size.y)
         )
 
-        pygame.draw.rect(screen, (0, 0, 0), rect)
+        pygame.draw.rect(screen, (30, 30, 30), rect)
 
     def __del__(self):
         pass
