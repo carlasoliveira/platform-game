@@ -7,22 +7,22 @@ class GameWorld:
         self.screen = screen
         self.clock = pygame.time.Clock()
         self.map = [
-            "111111111111111111111111111111111111111",
-            "1......................................1",
-            "11111..................................1",
-            "1......................................1",
-            "1......................................1",
-            "1.............11.......................1",
-            "1111111.......1111.....................1",
-            "1......................................1",
-            "1..........................1111111111111",
-            "1...................11.................1",
-            "1111111111111111111111111111111111111111",
-            "2222222222222222222222222222222222222222",
-            "1......................................1",
-            "11111..................................1",
-            "1......................................1",
-            "1......................................1"
+            ".......................................1",
+            ".......................................1",
+            "5......................................1",
+            "05.....................................1",
+            "02.....................................1",
+            "0035...................................1",
+            "000035.................................1",
+            "000002.................................1",
+            "000002.................................1",
+            "000002.................................1",
+            "000002.................................1",
+            "000002.................................1",
+            "000002......................4333335....1",
+            "0000003333333333333333333333000000033330",
+            "0000000000000000000000000000000000000000",
+            "0000000000000000000000000000000000000000"
         ]
 
         self.tileset = pygame.image.load('../resources/graphics/tileset.png').convert_alpha()
@@ -49,23 +49,27 @@ class GameWorld:
         tiles = []
         tile_size = 32
 
-        sprite_grass = self.get_sprite(self.tileset, 1, 3, 16)  # coluna 0, linha 3
-        sprite_dirt = self.get_sprite(self.tileset, 1, 4, 16)  # coluna 1, linha 3
-
-        print(f"sprite_grass: {sprite_grass.get_size()}")
+        tile_map = {
+            "0": self.get_sprite(self.tileset, 1, 4, 16), #tile_DIRT
+            "1": self.get_sprite(self.tileset, 0, 4, 16), #tile_DIRT_EDGE_LEFT
+            "2": self.get_sprite(self.tileset, 2, 4, 16), #tile_DIRT_EDGE_RIGHT
+            
+            "3": self.get_sprite(self.tileset, 1, 3, 16), #tile_GRASS
+            "4": self.get_sprite(self.tileset, 0, 3, 16), #tile_GRASS_EDGE_LEFT
+            "5": self.get_sprite(self.tileset, 2, 3, 16), #tile_GRASS_EDGE_RIGHT
+            
+            #"6": self.get_sprite(self.tileset, 0, 0, 16), #tile_
+            #"7": self.get_sprite(self.tileset, 0, 0, 16), #tile_
+            #"8": self.get_sprite(self.tileset, 0, 0, 16), #tile_
+        }
 
         for y, row in enumerate(self.map):
-            for x, tile in enumerate(row):
-                if tile == "1":
-                    img = pygame.transform.scale(sprite_grass, (32,32))
+            for x, tile_char in enumerate(row):
+                if tile_char in tile_map:
+
+                    img = pygame.transform.scale(tile_map[tile_char], (tile_size, tile_size))
                     position = Vector(x * tile_size, y * tile_size)
                     size = Vector(tile_size, tile_size)
-                    tile = Platform(position, size, img)
-                    tiles.append(tile)
-                if tile == "2":
-                    img = pygame.transform.scale(sprite_dirt, (32,32))
-                    position = Vector(x * tile_size, y * tile_size)
-                    size = Vector(tile_size, tile_size)
-                    tile = Platform(position, size, img)
-                    tiles.append(tile)
+
+                    tiles.append(Platform(position, size, img))
         return tiles
