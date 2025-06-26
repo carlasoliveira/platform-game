@@ -1,6 +1,7 @@
 import pygame
 
 from Platform import Platform, Vector
+from Decoration import Decoration, Vector
 
 class GameWorld:
     def __init__(self, screen):
@@ -18,9 +19,9 @@ class GameWorld:
             "000002.................................1",
             "000002.................................1",
             "000002.................................1",
-            "000002.........................45......1",
-            "000002.........43335........4337635....1",
-            "0000063333333337000633333333700000633330",
+            "000002.....................cebcfgh.....1",
+            "000002.........43335.....4333333335....1",
+            "0000063333333337000633333700000000633330",
             "0000000000000000000000000000000000000000",
             "0000000000000000000000000000000000000000"
         ]
@@ -49,7 +50,7 @@ class GameWorld:
         tiles = []
         tile_size = 32
 
-        tile_map = {
+        plataform_tile_map = {
             "0": self.get_sprite(self.tileset, 1, 8, 16), #tile_DIRT
             "1": self.get_sprite(self.tileset, 0, 8, 16), #tile_DIRT_EDGE_LEFT
             "2": self.get_sprite(self.tileset, 2, 8, 16), #tile_DIRT_EDGE_RIGHT
@@ -60,19 +61,37 @@ class GameWorld:
 
             "6": self.get_sprite(self.tileset, 4, 8, 16), #tile_GRASS_EDGE_TOP_LEFT
             "7": self.get_sprite(self.tileset, 5, 8, 16), #tile_GRASS_EDGE_TOP_RIGHT
-            
-            #"6": self.get_sprite(self.tileset, 0, 0, 16), #tile_
-            #"7": self.get_sprite(self.tileset, 0, 0, 16), #tile_
-            #"8": self.get_sprite(self.tileset, 0, 0, 16), #tile_
+        }
+
+        decoration_tile_map = {
+            "a": self.get_sprite(self.tileset, 9, 10, 16), #tile_WEEDS_1
+            "b": self.get_sprite(self.tileset, 10, 10, 16), #tile_WEEDS_2
+            "c": self.get_sprite(self.tileset, 11, 10, 16), #tile_WEEDS_3
+
+            "d": self.get_sprite(self.tileset, 11, 12, 16), #tile_FLOWERS_1
+            "e": self.get_sprite(self.tileset, 11, 13, 16), #tile_FLOWERS_2
+
+            "f": self.get_sprite(self.tileset, 9, 11, 16), #tile_FENCE_1
+            "g": self.get_sprite(self.tileset, 10, 11, 16), #tile_FENCE_2
+            "h": self.get_sprite(self.tileset, 11, 11, 16), #tile_FENCE_3
         }
 
         for y, row in enumerate(self.map):
             for x, tile_char in enumerate(row):
-                if tile_char in tile_map:
+                if tile_char in plataform_tile_map:
 
-                    img = pygame.transform.scale(tile_map[tile_char], (tile_size, tile_size))
+                    img = pygame.transform.scale(plataform_tile_map[tile_char], (tile_size, tile_size))
                     position = Vector(x * tile_size, y * tile_size)
                     size = Vector(tile_size, tile_size)
 
                     tiles.append(Platform(position, size, img))
+
+                if tile_char in decoration_tile_map:
+
+                    img = pygame.transform.scale(decoration_tile_map[tile_char], (tile_size, tile_size))
+                    position = Vector(x * tile_size, y * tile_size)
+                    size = Vector(tile_size, tile_size)
+
+                    tiles.append(Decoration(position, size, img))
+        
         return tiles
