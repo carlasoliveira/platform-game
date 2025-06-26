@@ -10,17 +10,17 @@ class GameWorld:
             ".......................................1",
             ".......................................1",
             "5......................................1",
-            "05.....................................1",
+            "65.....................................1",
             "02.....................................1",
-            "0035...................................1",
-            "000035.................................1",
+            "0635...................................1",
+            "000635.................................1",
             "000002.................................1",
             "000002.................................1",
             "000002.................................1",
             "000002.................................1",
-            "000002.................................1",
-            "000002......................4333335....1",
-            "0000003333333333333333333333000000033330",
+            "000002.........................45......1",
+            "000002.........43335........4337635....1",
+            "0000063333333337000633333333700000633330",
             "0000000000000000000000000000000000000000",
             "0000000000000000000000000000000000000000"
         ]
@@ -50,13 +50,16 @@ class GameWorld:
         tile_size = 32
 
         tile_map = {
-            "0": self.get_sprite(self.tileset, 1, 4, 16), #tile_DIRT
-            "1": self.get_sprite(self.tileset, 0, 4, 16), #tile_DIRT_EDGE_LEFT
-            "2": self.get_sprite(self.tileset, 2, 4, 16), #tile_DIRT_EDGE_RIGHT
+            "0": self.get_sprite(self.tileset, 1, 8, 16), #tile_DIRT
+            "1": self.get_sprite(self.tileset, 0, 8, 16), #tile_DIRT_EDGE_LEFT
+            "2": self.get_sprite(self.tileset, 2, 8, 16), #tile_DIRT_EDGE_RIGHT
             
-            "3": self.get_sprite(self.tileset, 1, 3, 16), #tile_GRASS
-            "4": self.get_sprite(self.tileset, 0, 3, 16), #tile_GRASS_EDGE_LEFT
-            "5": self.get_sprite(self.tileset, 2, 3, 16), #tile_GRASS_EDGE_RIGHT
+            "3": self.get_sprite(self.tileset, 1, 7, 16), #tile_GRASS
+            "4": self.get_sprite(self.tileset, 0, 7, 16), #tile_GRASS_EDGE_LEFT
+            "5": self.get_sprite(self.tileset, 2, 7, 16), #tile_GRASS_EDGE_RIGHT
+
+            "6": self.get_sprite(self.tileset, 4, 8, 16), #tile_GRASS_EDGE_TOP_LEFT
+            "7": self.get_sprite(self.tileset, 5, 8, 16), #tile_GRASS_EDGE_TOP_RIGHT
             
             #"6": self.get_sprite(self.tileset, 0, 0, 16), #tile_
             #"7": self.get_sprite(self.tileset, 0, 0, 16), #tile_
