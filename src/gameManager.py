@@ -1,6 +1,5 @@
 import pygame
 from gameWorld import GameWorld 
-from player import Player
 
 class GameManager:
     def __init__(self):
@@ -8,20 +7,16 @@ class GameManager:
         self.screen = pygame.display.set_mode((1280, 768))
         pygame.display.set_caption("Platform Game")
         self.world = GameWorld(self.screen)
-        self.player_sprites = self.world.load_player_sprites()
-        self.player = Player(self.player_sprites, [300, 600], [24, 34], [0, 0])
         self.running = True
         self.last_time = pygame.time.get_ticks()
 
     def run(self):
         while self.running:
             self._handle_events()
-            keys = pygame.key.get_pressed()
             delta_time = self._calculate_delta_time()
-            
-            self.player.move(keys, self.world.map)
-            self.player.update(delta_time, self.world.map)
+            self.world.update(delta_time)
             self._draw()
+            
             pygame.display.update()
             self.world.clock.tick(60)
             
@@ -33,14 +28,13 @@ class GameManager:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-                
-            
-            
+            else:
+                self.world.keyboard_events(event)
 
     def _draw(self):
-        self.world.draw_background()
-        self.world.draw_tiles()
+        self.world.draw()
         self.player.render(self.screen)
+
     
     def _calculate_delta_time(self):
         current_time = pygame.time.get_ticks()

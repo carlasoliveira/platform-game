@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 class Object(ABC):
     def __init__(self, position, size):
-        self._position = position  
-        self._size = size         
+        self._position = position
+        self._size = size
 
     def get_position(self):
         return self._position
@@ -33,3 +33,8 @@ class ObjectDynamic(Object):
     @abstractmethod
     def update(self, delta_time, game_map):
         pass
+
+
+class ObjectStatic(Object):
+    def __init__(self, position, size):
+        super().__init__(position, size)

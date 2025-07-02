@@ -1,9 +1,8 @@
-import pygame 
 import os
 import pygame
 
-from Platform import Platform, Vector
-
+from Platform import Platform
+from player import Player
 class GameWorld:
     def __init__(self, screen):
         self.screen = screen
@@ -25,6 +24,31 @@ class GameWorld:
 
         self.background = self._load_background()
         self.platforms = self._load_tiles()
+        self.player_sprites = self.load_player_sprites()
+        self.player = Player(
+            position=pygame.math.Vector2(300, 600),
+            sprites=self.player_sprites,
+            velocity=pygame.math.Vector2(0, 0),
+            size=pygame.math.Vector2(46, 54),
+            my_keys=[pygame.K_a, pygame.K_d, pygame.K_w]
+        )
+    
+
+
+    def update(self, delta_time):
+        self.player.update(delta_time)
+        self.player.verify_keyboard(pygame.event.get())
+        # for platform in self.platforms:
+        # platform.update(delta_time, self.map)
+    
+    def keyboard_events(self, event):
+       for event in pygame.event.get():
+        self.player.verify_keyboard(event)
+        
+    def draw(self):
+        self.draw_background()
+        self.draw_tiles()
+        self.player.render(self.screen)
 
     def draw_background(self):
         self.screen.blit(self.background, (0, 0))
@@ -45,8 +69,8 @@ class GameWorld:
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == "1":
-                    position = Vector(x * tile_size, y * tile_size)
-                    size = Vector(tile_size, tile_size)
+                    position = pygame.math.Vector2(x * tile_size, y * tile_size)
+                    size = pygame.math.Vector2(tile_size, tile_size)
                     tile = Platform(position, size)
                     tiles.append(tile)
         return tiles
