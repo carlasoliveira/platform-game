@@ -21,8 +21,11 @@ class Player(ObjectDynamic):
         self.last_animation = 0
         self.m_move_to_right = False
         self.m_move_to_left = False
+        self.m_is_on_ground = False
         self.m_my_keys = my_keys  
-        self.gravity = 9.8  
+        self.gravity = 50.8
+    
+    
 
     def render(self, surface):
         anims = self.sprites[self.animation]
@@ -40,37 +43,29 @@ class Player(ObjectDynamic):
         self.set_velocity(velocity)
         self.set_position(position)
 
-    def verify_keyboard(self, event):
-        if event.type == pg.KEYDOWN:
-            if event.key == self.m_my_keys[Button.LEFT.value]:
+    def verify_keyboard(self):
+        teclas = pg.key.get_pressed()
+        current_velocity = self.get_velocity()
+
+        if teclas[self.m_my_keys[Button.LEFT.value]]:
                 self.m_move_to_left = True
                 print("LEFT pressed")
-                self.animation = 3 
-                self.set_velocity(pg.math.Vector2(-100.0, 0.0))
-
-            elif event.key == self.m_my_keys[Button.RIGHT.value]:
+                self.animation = 3
+                self.set_velocity(pg.math.Vector2(-30.0, current_velocity.y))
+        elif teclas[self.m_my_keys[Button.RIGHT.value]]:
                 self.m_move_to_right = True
                 print("RIGHT pressed")
                 self.animation = 2
-                self.set_velocity(pg.math.Vector2(100.0, 0.0))
-
-            elif event.key == self.m_my_keys[Button.UP.value]:
-                print("Up pressed")
-                if self.m_move_to_left:
-                    self.set_velocity(pg.math.Vector2(-30.0, -2000.0))
-                    print("Up to the LEFT")
-                elif self.m_move_to_right:
-                    self.set_velocity(pg.math.Vector2(30.0, -40.0))
-                    print("Up to the RIGHT")
-                else:
-                    self.set_velocity(pg.math.Vector2(0.0, -350.0))
-                    print("Jumping UP")
-
-        elif event.type == pg.KEYUP:
-            if event.key in [self.m_my_keys[Button.LEFT.value],
-                             self.m_my_keys[Button.RIGHT.value],
-                             self.m_my_keys[Button.UP.value]]:
+                self.set_velocity(pg.math.Vector2(30.0, current_velocity.y))
+        else:
+                # Para o movimento horizontal quando nenhuma tecla de direção está pressionada
                 self.m_move_to_left = False
                 self.m_move_to_right = False
-                print("Key released")
-                self.set_velocity(pg.math.Vector2(0.0, 0.0))
+                self.animation = 2  # Volta para animação idle
+                self.set_velocity(pg.math.Vector2(0.0, current_velocity.y))
+
+        if teclas[self.m_my_keys[Button.UP.value]]:
+            if self.m_is_on_ground:
+                self.set_velocity(pg.math.Vector2(current_velocity.x, -100.0))
+                print("Jumping UP")
+        print('Is on ground:', self.m_is_on_ground)

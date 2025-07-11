@@ -29,21 +29,23 @@ class GameWorld:
             position=pygame.math.Vector2(300, 600),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
-            size=pygame.math.Vector2(46, 54),
-            my_keys=[pygame.K_a, pygame.K_d, pygame.K_w]
+            size=pygame.math.Vector2(15, 15),
+            my_keys=[pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP]
         )
-    
+        
+    def resolve_collisions(self):
+        from collider import Collider
+        collider = Collider()
+        collider.resolve_collision(self.player, self.platforms)
 
 
     def update(self, delta_time):
         self.player.update(delta_time)
-        self.player.verify_keyboard(pygame.event.get())
         # for platform in self.platforms:
         # platform.update(delta_time, self.map)
     
-    def keyboard_events(self, event):
-       for event in pygame.event.get():
-        self.player.verify_keyboard(event)
+    def keyboard_events(self):
+        self.player.verify_keyboard()
         
     def draw(self):
         self.draw_background()
@@ -77,13 +79,13 @@ class GameWorld:
 
     def load_player_sprites(self):
         base_path = os.path.dirname(__file__)
-        idle_path = os.path.join(base_path, '..', 'resources', 'idle', '1.PNG')
+        idle_path = os.path.join(base_path, '..', 'resources', 'idle', '1.JPEG')
         idle = [pygame.transform.scale(pygame.image.load(idle_path), (128, 80))]
         right = [
             pygame.transform.scale(
                 pygame.image.load(
-                    os.path.join(base_path, '..', 'resources', 'run', f'{i}.PNG')
-                ), (128, 80)
+                    os.path.join(base_path, '..', 'resources', 'run', f'{i}.JPEG')
+                ), (15, 15)
             )
             for i in range(1,4)
         ]

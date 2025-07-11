@@ -13,22 +13,22 @@ class Collider:
         distance = pg.math.Vector2(dynamic_pos.x - static_pos.x, dynamic_pos.y - static_pos.y)
         target_distance = (static_object.get_size() + dynamic_object.get_size()) / 2.0
 
-        static_rect = pg.Rect(
-            static_pos.x - static_object.get_size().x / 2,
-            static_pos.y - static_object.get_size().y / 2,
-            static_object.get_size().x,
-            static_object.get_size().y
-        )
+        # static_rect = pg.Rect(
+        #     static_pos.x - static_object.get_size().x / 2,
+        #     static_pos.y - static_object.get_size().y / 2,
+        #     static_object.get_size().x,
+        #     static_object.get_size().y
+        # )
 
-        dynamic_rect = pg.Rect(
-            dynamic_pos.x - dynamic_object.get_size().x / 2,
-            dynamic_pos.y - dynamic_object.get_size().y / 2,
-            dynamic_object.get_size().x,
-            dynamic_object.get_size().y
-        )
+        # dynamic_rect = pg.Rect(
+        #     dynamic_pos.x - dynamic_object.get_size().x / 2,
+        #     dynamic_pos.y - dynamic_object.get_size().y / 2,
+        #     dynamic_object.get_size().x,
+        #     dynamic_object.get_size().y
+        # )
 
-        pg.draw.rect(self.screen, (255, 255, 0), static_rect, 2)
-        pg.draw.rect(self.screen, (0, 255, 0), dynamic_rect, 2)
+        # pg.draw.rect(self.screen, (255, 255, 0), static_rect, 2)
+        # pg.draw.rect(self.screen, (0, 255, 0), dynamic_rect, 2)
 
         collision_x = abs(distance.x) < target_distance.x
         collision_vector.x = math.copysign(target_distance.x - abs(distance.x), distance.x)
@@ -49,13 +49,15 @@ class Collider:
                 dyn_pos = dynamic_object.get_position()
 
                 if abs_ds_y <= abs_ds_x:
-                    print("COLLISION DETECTED IN Y")
+                    # print("COLLISION DETECTED IN Y")
                     dyn_pos.y += ds.y
                     dynamic_object.set_velocity(pg.math.Vector2(dynamic_object.get_velocity().x, 0))
+                    dynamic_object.m_is_on_ground = True  
+
                 elif abs_ds_x < abs_ds_y:
-                    print("COLLISION DETECTED IN X")
+                    # print("COLLISION DETECTED IN X")
                     dyn_pos.x += ds.x
                     dynamic_object.set_velocity(pg.math.Vector2(0, dynamic_object.get_velocity().y))
 
                 dynamic_object.set_position(dyn_pos)
-
+        dynamic_object.m_is_on_ground = False

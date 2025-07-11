@@ -14,13 +14,15 @@ class GameManager:
         while self.running:
             self._handle_events()
             delta_time = self._calculate_delta_time()
-            self.world.update(delta_time)
             self._draw()
             
+            # Verifica o teclado a cada frame, não apenas em eventos
+            self.world.keyboard_events()
+            self.world.update(delta_time)
             pygame.display.update()
             self.world.clock.tick(60)
-            
-            
+            self.world.resolve_collisions()
+
     def _handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -28,12 +30,10 @@ class GameManager:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-            else:
-                self.world.keyboard_events(event)
 
     def _draw(self):
         self.world.draw()
-        self.player.render(self.screen)
+        self.world.player.render(self.screen)
 
     
     def _calculate_delta_time(self):
