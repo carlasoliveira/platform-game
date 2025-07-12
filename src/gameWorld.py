@@ -3,30 +3,33 @@ import pygame
 
 from Platform import Platform
 from player import Player
+from collectible import Collectible
 class GameWorld:
     def __init__(self, screen):
         self.screen = screen
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, 36)  # Font para o score
         self.map = [
             "11111111111111111111",
-            "1..................1",
-            "11111..............1",
+            "1...c..............1",
+            "11111..c...........1",
             "1......11111111....1",
-            "1..................1",
+            "1.........c........1",
             "1.............11...1",
-            "1111111............1",
+            "11111..c...........1",
             "1..................1",
             "1......1111111111111",
-            "1..11..............1",
-            "1..................1",
+            "1..111.....c.......1",
+            "1........c.........1",
             "11111111111111111111"
         ]
 
         self.background = self._load_background()
         self.platforms = self._load_tiles()
+        self.collectibles = self._load_collectibles()
         self.player_sprites = self.load_player_sprites()
         self.player = Player(
-            position=pygame.math.Vector2(300, 600),
+            position=pygame.math.Vector2(100, 600),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(15, 15),
@@ -37,6 +40,7 @@ class GameWorld:
         from collider import Collider
         collider = Collider()
         collider.resolve_collision(self.player, self.platforms)
+        collider.check_collectible_collision(self.player, self.collectibles)
 
 
     def update(self, delta_time):
@@ -50,6 +54,8 @@ class GameWorld:
     def draw(self):
         self.draw_background()
         self.draw_tiles()
+        self.draw_collectibles()
+        self.draw_score()
         self.player.render(self.screen)
 
     def draw_background(self):
@@ -58,6 +64,14 @@ class GameWorld:
     def draw_tiles(self):
         for platform in self.platforms:
             platform.render(self.screen)
+
+    def draw_collectibles(self):
+        for collectible in self.collectibles:
+            collectible.render(self.screen)
+
+    def draw_score(self):
+        score_text = self.font.render(f"Pontos: {self.player.get_score()}", True, (255, 255, 255))
+        self.screen.blit(score_text, (10, 10))
 
     def _load_background(self):
         base_path = os.path.dirname(__file__)
@@ -76,6 +90,19 @@ class GameWorld:
                     tile = Platform(position, size)
                     tiles.append(tile)
         return tiles
+
+    def _load_collectibles(self):
+        """Carrega coletáveis do mapa baseado na posição dos 'c'"""
+        collectibles = []
+        tile_size = 64
+        for y, row in enumerate(self.map):
+            for x, tile in enumerate(row):
+                if tile == "c":
+                    position = pygame.math.Vector2(x * tile_size + 20, y * tile_size + 20)
+                    size = pygame.math.Vector2(24, 24)  # Coletáveis menores que tiles
+                    collectible = Collectible(position, size, points=10)
+                    collectibles.append(collectible)
+        return collectibles
 
     def load_player_sprites(self):
         base_path = os.path.dirname(__file__)

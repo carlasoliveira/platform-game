@@ -40,6 +40,9 @@ class Collider:
 
 
     def resolve_collision(self, dynamic_object, platforms):
+        # Reset m_is_on_ground no início - será True apenas se houver colisão no chão
+        dynamic_object.m_is_on_ground = False
+        
         for platform in platforms:
             colliding, ds = self.check_collider(platform, dynamic_object)
             abs_ds_x = abs(ds.x)
@@ -52,7 +55,10 @@ class Collider:
                     # print("COLLISION DETECTED IN Y")
                     dyn_pos.y += ds.y
                     dynamic_object.set_velocity(pg.math.Vector2(dynamic_object.get_velocity().x, 0))
-                    dynamic_object.m_is_on_ground = True  
+                    
+                    # Só marca como no chão se a colisão é por baixo (player caindo)
+                    if ds.y < 0:  # Player está sendo empurrado para cima (colidiu com o chão)
+                        dynamic_object.m_is_on_ground = True  
 
                 elif abs_ds_x < abs_ds_y:
                     # print("COLLISION DETECTED IN X")
@@ -60,4 +66,13 @@ class Collider:
                     dynamic_object.set_velocity(pg.math.Vector2(0, dynamic_object.get_velocity().y))
 
                 dynamic_object.set_position(dyn_pos)
-        dynamic_object.m_is_on_ground = False
+
+    def check_collectible_collision(self, player, collectibles):
+        """Verifica colisão entre player e itens coletáveis"""
+        for collectible in collectibles:
+            if not collectible.is_collected():
+                colliding, _ = self.check_collider(collectible, player)
+                if colliding:
+                    points = collectible.collect()
+                    player.collect_points(points)
+                    print(f"Coletável pego! +{points} pontos")
