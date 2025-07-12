@@ -72,7 +72,7 @@ class Collider:
         for collectible in collectibles:
             if not collectible.is_collected():
                 colliding, _ = self.check_collider(collectible, player)
-                if colliding:
+                if colliding and player.can_collect(collectible):
                     points = collectible.collect()
                     player.collect_points(points)
-                    print(f"Coletável pego! +{points} pontos")
+                    print(f"Player {player.get_player_type()} coletou {collectible.get_type()}! +{points} pontos")

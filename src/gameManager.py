@@ -1,14 +1,20 @@
 import pygame
 from gameWorld import GameWorld 
+import os
 
 class GameManager:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()  # Inicializar mixer para música
+        
         self.screen = pygame.display.set_mode((1280, 768))
         pygame.display.set_caption("Platform Game")
         self.world = GameWorld(self.screen)
         self.running = True
         self.last_time = pygame.time.get_ticks()
+        
+        # Carregar e tocar música de fundo
+        self.world._load_background_music()
 
     def run(self):
         while self.running:
@@ -33,7 +39,6 @@ class GameManager:
 
     def _draw(self):
         self.world.draw()
-        self.world.player.render(self.screen)
 
     
     def _calculate_delta_time(self):
@@ -41,3 +46,5 @@ class GameManager:
         delta_time = (current_time - self.last_time) / 1000.0
         self.last_time = current_time
         return delta_time
+
+    
