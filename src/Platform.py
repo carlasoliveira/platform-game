@@ -1,17 +1,6 @@
 import pygame
 
-from Object import ObjectStatic
-
-class Vector:
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
-
-    def __add__(self, other):
-        return Vector(self.x + other.x, self.y + other.y)
-
-    def __truediv__(self, scalar):
-        return Vector(self.x / scalar, self.y / scalar)
+from object import ObjectStatic
 
 
 class Platform(ObjectStatic):
