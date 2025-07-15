@@ -15,7 +15,6 @@ class Collectible(ObjectStatic):
         self.animated_sprite = self._load_animated_sprite()
         
     def _load_animated_sprite(self):
-        """Carrega o GIF animado da ovelhinha"""
         try:
             from animated_gif import AnimatedGif
             
@@ -50,7 +49,6 @@ class Collectible(ObjectStatic):
                 self._render_fallback(surface)
     
     def _render_fallback(self, surface):
-        """Renderiza círculo colorido como fallback"""
         center_x = int(self._position.x + self._size.x / 2)
         center_y = int(self._position.y + self._size.y / 2)
         radius = int(min(self._size.x, self._size.y) / 2)

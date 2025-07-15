@@ -3,6 +3,7 @@ import pygame
 
 from animated_gif import AnimatedGif
 from Platform import Platform
+from decoration import Decoration
 from player import Player
 from collectible import Collectible
 class GameWorld:
@@ -11,38 +12,54 @@ class GameWorld:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)  # Font para o score
         self.map = [
-            "11111111111111111111",
-            "1...b..............1",
-            "11111..w...........1",
-            "1......11111111....1",
-            "1.........b........1",
-            "1.........11..11...1",
-            "11111..w...........1",
-            "1...........1......1",
-            "1......1111111111111",
-            "1..111.....b.......1",
-            "1........w.........1",
-            "11111111111111111111"
+            ".......................................1",
+            ".......................................1",
+            ".......................................1",
+            "................w......................1",
+            "5..............43335...................1",
+            "65.....................................1",
+            "02...................................w.1",
+            "0635.w............................433337",
+            "000635.................................1",
+            "000002...................43335.........1",
+            "000002.................................1",
+            "000002.................435.............1",
+            "000002.................................1",
+            "000002..............43335........435...1",
+            "000002......435........................1",
+            "000002.................................1",
+            "000002............4335.........s.......1",
+            "000002....................cebcfgh......1",
+            "000002.........43335.....4333333335....1",
+            "000002.........10002.....1000000002....1",
+            "000002.........10002.....1000000002....1",
+            "000002.......aa10002.....1000000002c...1",
+            "0000063333333337000633333700000000633337",
+            "0000000000000000000000000000000000000000",
+            "0000000000000000000000000000000000000000",
+            "0000000000000000000000000000000000000000"
         ]
 
         self.background = self._load_background()
+        self.tileset = self._load_tileset()  # Carregar tileset
         self.platforms = self._load_tiles()
         self.collectibles = self._load_collectibles()
         self.player_sprites = self.load_player_sprites()
         
-        # Player 1 (setas) - coleta ovelhas brancas
+        # Carregar música de fundo
+        self._load_background_music()
+        
         self.player1 = Player(
-            position=pygame.math.Vector2(100, 600),
+            position=pygame.math.Vector2(100, 150),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),  # Hitbox menor que o sprite
             my_keys=[pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP],
             player_type="player1"
         )
-        
-        # Player 2 (A,W,D) - coleta ovelhas pretas
+
         self.player2 = Player(
-            position=pygame.math.Vector2(200, 600),
+            position=pygame.math.Vector2(30, 100),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),  # Hitbox menor que o sprite
@@ -91,11 +108,9 @@ class GameWorld:
             collectible.render(self.screen)
 
     def draw_score(self):
-        # Score Player 1 (ovelhas brancas)
         score1_text = self.font.render(f"Player 1 (Brancas): {self.player1.get_score()}", True, (255, 255, 255))
         self.screen.blit(score1_text, (10, 10))
-        
-        # Score Player 2 (ovelhas pretas)
+
         score2_text = self.font.render(f"Player 2 (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
         self.screen.blit(score2_text, (10, 50))
 
@@ -105,35 +120,87 @@ class GameWorld:
         bg = pygame.image.load(bg_path)
         return pygame.transform.scale(bg, (1280, 768))
 
-    def _load_tiles(self):
-        tiles = []
-        tile_size = 64
-        for y, row in enumerate(self.map):
-            for x, tile in enumerate(row):
-                if tile == "1":
-                    position = pygame.math.Vector2(x * tile_size, y * tile_size)
-                    size = pygame.math.Vector2(tile_size, tile_size)
-                    tile = Platform(position, size)
-                    tiles.append(tile)
-        return tiles
+    def _load_tileset(self):
+        base_path = os.path.dirname(__file__)
+        tileset_path = os.path.join(base_path, '..', 'resources', 'graphics', 'tile1.png')
+        tileset = pygame.image.load(tileset_path)
+        return tileset
+
+
+    def get_sprite(self, tileset, x, y, tile_size):
+        sprite = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
+        sprite.blit(tileset, (0, 0), (x * tile_size, y * tile_size, tile_size, tile_size))
+        return sprite
 
     def _load_collectibles(self):
         from collectible import CollectibleType
         collectibles = []
-        tile_size = 64
+        tile_size = 32  # Mesmo tamanho usado para os tiles do mapa
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == "w":
-                    position = pygame.math.Vector2(x * tile_size + 20, y * tile_size + 20)
+                    position = pygame.math.Vector2(x * tile_size + 4, y * tile_size + 4)
                     size = pygame.math.Vector2(24, 24)
                     collectible = Collectible(position, size, CollectibleType.WHITE_SHEEP, points=10)
                     collectibles.append(collectible)
-                elif tile == "b":
-                    position = pygame.math.Vector2(x * tile_size + 20, y * tile_size + 20)
+                elif tile == "s":
+                    position = pygame.math.Vector2(x * tile_size + 4, y * tile_size + 4)
                     size = pygame.math.Vector2(24, 24)
                     collectible = Collectible(position, size, CollectibleType.BLACK_SHEEP, points=10)
                     collectibles.append(collectible)
         return collectibles
+
+    def _load_tiles(self):
+
+        tiles = []
+        tile_size = 32
+
+        plataform_tile_map = {
+            "0": self.get_sprite(self.tileset, 1, 8, 16), #tile_DIRT
+            "1": self.get_sprite(self.tileset, 0, 8, 16), #tile_DIRT_EDGE_LEFT
+            "2": self.get_sprite(self.tileset, 2, 8, 16), #tile_DIRT_EDGE_RIGHT
+            
+            "3": self.get_sprite(self.tileset, 1, 7, 16), #tile_GRASS
+            "4": self.get_sprite(self.tileset, 0, 7, 16), #tile_GRASS_EDGE_LEFT
+            "5": self.get_sprite(self.tileset, 2, 7, 16), #tile_GRASS_EDGE_RIGHT
+
+            "6": self.get_sprite(self.tileset, 4, 8, 16), #tile_GRASS_EDGE_TOP_LEFT
+            "7": self.get_sprite(self.tileset, 5, 8, 16), #tile_GRASS_EDGE_TOP_RIGHT
+        }
+
+        decoration_tile_map = {
+            "a": self.get_sprite(self.tileset, 9, 10, 16), #tile_WEEDS_1
+            "b": self.get_sprite(self.tileset, 10, 10, 16), #tile_WEEDS_2
+            "c": self.get_sprite(self.tileset, 11, 10, 16), #tile_WEEDS_3
+
+            "d": self.get_sprite(self.tileset, 11, 12, 16), #tile_FLOWERS_1
+            "e": self.get_sprite(self.tileset, 11, 13, 16), #tile_FLOWERS_2
+
+            "f": self.get_sprite(self.tileset, 9, 11, 16), #tile_FENCE_1
+            "g": self.get_sprite(self.tileset, 10, 11, 16), #tile_FENCE_2
+            "h": self.get_sprite(self.tileset, 11, 11, 16), #tile_FENCE_3
+        }
+
+        for y, row in enumerate(self.map):
+            for x, tile_char in enumerate(row):
+                if tile_char in plataform_tile_map:
+
+                    img = pygame.transform.scale(plataform_tile_map[tile_char], (tile_size, tile_size))
+                    position = pygame.math.Vector2(x * tile_size, y * tile_size)
+                    size = pygame.math.Vector2(tile_size, tile_size)
+
+                    tiles.append(Platform(position, size, img))
+
+                if tile_char in decoration_tile_map:
+
+                    img = pygame.transform.scale(decoration_tile_map[tile_char], (tile_size, tile_size))
+                    position = pygame.math.Vector2(x * tile_size, y * tile_size)
+                    size = pygame.math.Vector2(tile_size, tile_size)
+
+                    tiles.append(Decoration(position, size, img))
+        
+        return tiles
+
 
     def load_player_sprites(self):
         
