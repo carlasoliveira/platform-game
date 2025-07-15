@@ -13,7 +13,6 @@ Trabalhe em equipe, resolva desafios e descubra segredos escondidos entre as col
 ## 🧩 Principais Mecânicas
 
 - **Dois personagens jogáveis:** cada pastor possui habilidades únicas.
-- **Puzzles cooperativos:** troque de personagem e use suas habilidades combinadas para avançar.
 - **Cenários desafiadores:** ambientações baseadas nas paisagens das Terras Altas da Escócia.
 - **Sistema de física simples:** saltos, colisões e plataformas móveis.
 
