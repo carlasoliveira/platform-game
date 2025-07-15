@@ -23,7 +23,7 @@ class Player(ObjectDynamic):
         self.m_move_to_left = False
         self.m_is_on_ground = False
         self.m_my_keys = my_keys  
-        self.gravity = 50.8
+        self.gravity = 280.8
         self.m_player_type = player_type  # "player1" ou "player2"
         
         # Definir qual tipo de coletável cada player pode pegar
@@ -95,12 +95,12 @@ class Player(ObjectDynamic):
                 self.m_move_to_left = True
                 print("LEFT pressed")
                 self.current_animation = 'run_left'
-                self.set_velocity(pg.math.Vector2(-40.0, current_velocity.y))
+                self.set_velocity(pg.math.Vector2(-80.0, current_velocity.y))
         elif teclas[self.m_my_keys[Button.RIGHT.value]]:
                 self.m_move_to_right = True
                 print("RIGHT pressed")
                 self.current_animation = 'run_right'
-                self.set_velocity(pg.math.Vector2(40.0, current_velocity.y))
+                self.set_velocity(pg.math.Vector2(80.0, current_velocity.y))
         else:
                 # Para o movimento horizontal quando nenhuma tecla de direção está pressionada
                 self.m_move_to_left = False
@@ -110,7 +110,7 @@ class Player(ObjectDynamic):
 
         if teclas[self.m_my_keys[Button.UP.value]]:
             if self.m_is_on_ground:
-                self.set_velocity(pg.math.Vector2(current_velocity.x, -130.0))
+                self.set_velocity(pg.math.Vector2(current_velocity.x, -350.0))
                 print("Jumping UP")
                 
                 # Tocar som de pulo
