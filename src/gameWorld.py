@@ -1,6 +1,7 @@
 import os
 import pygame
 
+from collider import Collider
 from animated_gif import AnimatedGif
 from Platform import Platform
 from decoration import Decoration
@@ -10,74 +11,69 @@ class GameWorld:
     def __init__(self, screen):
         self.screen = screen
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font(None, 36)  # Font para o score
+        self.font = pygame.font.Font(None, 36)
         self.map = [
-            ".......................................1",
-            ".......................................1",
-            ".......................................1",
-            "................w......................1",
-            "5..............43335...................1",
+            "2......................................1",
+            "2......................................1",
+            "2......................................1",
+            "2................w.....................1",
+            "2......433333333333333333333333333333337",
+            "2......................................1",
+            "2...w.................................w1",
+            "2.cfgh................................47",
+            "633333333333333333333333333333335......1",
+            "2....................s.................1",
+            "2......................................1",
+            "2......................................1",
+            "2......433333333333333333333333333333337",
+            "2......................................1",
             "65.....................................1",
-            "02...................................w.1",
-            "0635.w............................433337",
-            "000635.................................1",
-            "000002...................43335.........1",
-            "000002.................................1",
-            "000002.................435.............1",
-            "000002.................................1",
-            "000002..............43335........435...1",
-            "000002......435........................1",
-            "000002.................................1",
-            "000002............4335.........s.......1",
-            "000002....................cebcfgh......1",
-            "000002.........43335.....4333333335....1",
-            "000002.........10002.....1000000002....1",
-            "000002.........10002.....1000000002....1",
-            "000002.......aa10002.....1000000002c...1",
-            "0000063333333337000633333700000000633337",
-            "0000000000000000000000000000000000000000",
-            "0000000000000000000000000000000000000000",
-            "0000000000000000000000000000000000000000"
+            "0635s..................................1",
+            "000635..........................s......1",
+            "0000063333333333333333333333333335.....1",
+            "2......................................1",
+            "2..................................s.937",
+            "2.................................933700",
+            "2............aa.....cebcfgh....933700000",
+            "6333333333333335..9333333333333700000000",
+            "0000000000000002..1000000000000000000000",
+            "0000000000000002..1000000000000000000000",
         ]
 
         self.background = self._load_background()
-        self.tileset = self._load_tileset()  # Carregar tileset
-        self.platforms = self._load_tiles()
+        self.tileset = self._load_tileset()
+        self.platforms = self._load_platforms()
+        self.decorations = self._load_decorations()
         self.collectibles = self._load_collectibles()
         self.player_sprites = self.load_player_sprites()
-        
-        # Carregar música de fundo
         self._load_background_music()
+        self.collider = Collider()
         
         self.player1 = Player(
-            position=pygame.math.Vector2(100, 150),
+            position=pygame.math.Vector2(100, 600),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
-            size=pygame.math.Vector2(24, 40),  # Hitbox menor que o sprite
+            size=pygame.math.Vector2(24, 40),
             my_keys=[pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP],
             player_type="player1"
         )
 
         self.player2 = Player(
-            position=pygame.math.Vector2(30, 100),
+            position=pygame.math.Vector2(30, 600),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
-            size=pygame.math.Vector2(24, 40),  # Hitbox menor que o sprite
+            size=pygame.math.Vector2(24, 40),
             my_keys=[pygame.K_a, pygame.K_d, pygame.K_w],
             player_type="player2"
         )
         
     def resolve_collisions(self):
-        from collider import Collider
-        collider = Collider()
         
-        # Colisões com plataformas para ambos os players
-        collider.resolve_collision(self.player1, self.platforms)
-        collider.resolve_collision(self.player2, self.platforms)
-        
-        # Colisões com coletáveis para ambos os players
-        collider.check_collectible_collision(self.player1, self.collectibles)
-        collider.check_collectible_collision(self.player2, self.collectibles)
+        self.collider.resolve_collision(self.player1, self.platforms)
+        self.collider.resolve_collision(self.player2, self.platforms)
+
+        self.collider.check_collectible_collision(self.player1, self.collectibles)
+        self.collider.check_collectible_collision(self.player2, self.collectibles)
 
 
     def update(self, delta_time):
@@ -102,6 +98,8 @@ class GameWorld:
     def draw_tiles(self):
         for platform in self.platforms:
             platform.render(self.screen)
+        for decoration in self.decorations:
+            decoration.render(self.screen)
 
     def draw_collectibles(self):
         for collectible in self.collectibles:
@@ -135,7 +133,7 @@ class GameWorld:
     def _load_collectibles(self):
         from collectible import CollectibleType
         collectibles = []
-        tile_size = 32  # Mesmo tamanho usado para os tiles do mapa
+        tile_size = 32
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == "w":
@@ -150,9 +148,8 @@ class GameWorld:
                     collectibles.append(collectible)
         return collectibles
 
-    def _load_tiles(self):
-
-        tiles = []
+    def _load_platforms(self):
+        platforms = []
         tile_size = 32
 
         plataform_tile_map = {
@@ -166,7 +163,23 @@ class GameWorld:
 
             "6": self.get_sprite(self.tileset, 4, 8, 16), #tile_GRASS_EDGE_TOP_LEFT
             "7": self.get_sprite(self.tileset, 5, 8, 16), #tile_GRASS_EDGE_TOP_RIGHT
+            "8": self.get_sprite(self.tileset, 9, 7, 16), #tile_GRASS_EDGE_TOP_RIGHT
+            "9": self.get_sprite(self.tileset, 7, 7, 16), #tile_GRASS_EDGE_TOP_RIGHT
         }
+
+        for y, row in enumerate(self.map):
+            for x, tile_char in enumerate(row):
+                if tile_char in plataform_tile_map:
+                    img = pygame.transform.scale(plataform_tile_map[tile_char], (tile_size, tile_size))
+                    position = pygame.math.Vector2(x * tile_size, y * tile_size)
+                    size = pygame.math.Vector2(tile_size, tile_size)
+                    platforms.append(Platform(position, size, img))
+        
+        return platforms
+
+    def _load_decorations(self):
+        decorations = []
+        tile_size = 32
 
         decoration_tile_map = {
             "a": self.get_sprite(self.tileset, 9, 10, 16), #tile_WEEDS_1
@@ -183,23 +196,13 @@ class GameWorld:
 
         for y, row in enumerate(self.map):
             for x, tile_char in enumerate(row):
-                if tile_char in plataform_tile_map:
-
-                    img = pygame.transform.scale(plataform_tile_map[tile_char], (tile_size, tile_size))
-                    position = pygame.math.Vector2(x * tile_size, y * tile_size)
-                    size = pygame.math.Vector2(tile_size, tile_size)
-
-                    tiles.append(Platform(position, size, img))
-
                 if tile_char in decoration_tile_map:
-
                     img = pygame.transform.scale(decoration_tile_map[tile_char], (tile_size, tile_size))
                     position = pygame.math.Vector2(x * tile_size, y * tile_size)
                     size = pygame.math.Vector2(tile_size, tile_size)
-
-                    tiles.append(Decoration(position, size, img))
+                    decorations.append(Decoration(position, size, img))
         
-        return tiles
+        return decorations
 
 
     def load_player_sprites(self):
