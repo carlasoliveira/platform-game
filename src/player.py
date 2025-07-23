@@ -115,20 +115,12 @@ class Player(ObjectDynamic):
         sounds_path = os.path.join(base_path, '..', 'resources', 'sounds')
         
         sounds_to_load = [
-            ('jump.wav', 0.5, 'm_jump_sound', 'pulo'),
-            ('collect.wav', 0.7, 'm_collect_sound', 'coleta'),
-            ('walk.wav', 0.3, 'm_walk_sound', 'caminhada')
+            ('jump.wav', 0.5, 'm_jump_sound'),
+            ('collect.wav', 0.7, 'm_collect_sound'),
         ]
-        
-        for filename, volume, attribute, description in sounds_to_load:
-            try:
+        #  ('walk.wav', 0.3, 'm_walk_sound')
+        for filename, volume, attribute in sounds_to_load:
                 sound_path = os.path.join(sounds_path, filename)
                 sound = pg.mixer.Sound(sound_path)
                 sound.set_volume(volume)
                 setattr(self, attribute, sound)
-            except (pg.error, FileNotFoundError) as e:
-                print(f"Aviso: Não foi possível carregar o som {filename} ({description}): {e}")
-                # Criar um som vazio como fallback
-                empty_sound = pg.mixer.Sound(buffer=b'\x00' * 1000)  # Som vazio
-                empty_sound.set_volume(0)
-                setattr(self, attribute, empty_sound)

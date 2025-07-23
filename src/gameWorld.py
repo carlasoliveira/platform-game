@@ -17,20 +17,20 @@ class GameWorld:
             "2......................................1",
             "2......................................1",
             "2................w.....................1",
-            "2......433333333333333333333333333333337",
+            "2...3..433333333333333333333333333333337",
             "2......................................1",
             "2...w.................................w1",
-            "2.cfgh................................47",
-            "633333333333333333333333333333335......1",
+            "65cfgh................................47",
+            "633333333333333333333333333333335...3..1",
             "2....................s.................1",
-            "2......................................1",
+            "2.................................3....1",
             "2......................................1",
             "2......433333333333333333333333333333337",
-            "2......................................1",
+            "2...3..................................1",
             "65.....................................1",
-            "0635s..................................1",
-            "000635..........................s......1",
-            "0000063333333333333333333333333335.....1",
+            "02s....................................1",
+            "0635...........................s.......1",
+            "000633333333333333333333333333335......1",
             "2......................................1",
             "2..................................s.937",
             "2.................................933700",
@@ -106,10 +106,10 @@ class GameWorld:
             collectible.render(self.screen)
 
     def draw_score(self):
-        score1_text = self.font.render(f"Player 1 (Brancas): {self.player1.get_score()}", True, (255, 255, 255))
+        score1_text = self.font.render(f"Pastor (Brancas): {self.player1.get_score()}", True, (255, 255, 255))
         self.screen.blit(score1_text, (10, 10))
 
-        score2_text = self.font.render(f"Player 2 (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
+        score2_text = self.font.render(f"Pastor (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
         self.screen.blit(score2_text, (10, 50))
 
     def _load_background(self):
@@ -210,43 +210,29 @@ class GameWorld:
         base_path = os.path.dirname(__file__)
         sprite_size = (32, 48)
         
-        try:
-
-            idle_path = os.path.join(base_path, '..', 'resources', 'idle', 'Player_Idle.gif')
-            idle_gif = AnimatedGif(idle_path, sprite_size)
-
-            run_path = os.path.join(base_path, '..', 'resources', 'run', 'Player_Run.gif')
-            run_gif = AnimatedGif(run_path, sprite_size)
-
-            run_left_gif = run_gif.get_flipped_frames()
+        idle_path = os.path.join(base_path, '..', 'resources', 'idle', 'Player_Idle.gif')
+        idle_gif = AnimatedGif(idle_path, sprite_size)
+        run_path = os.path.join(base_path, '..', 'resources', 'run', 'Player_Run.gif')
+        run_gif = AnimatedGif(run_path, sprite_size)
+        run_left_gif = run_gif.get_flipped_frames()
             
-            return {
-                'idle': idle_gif,
-                'idle_left': idle_gif,  
-                'run_right': run_gif,
-                'run_left': run_left_gif
-            }
+        return {
+            'idle': idle_gif,
+            'idle_left': idle_gif,  
+            'run_right': run_gif,
+            'run_left': run_left_gif
+        }
             
-        except Exception as e:
-            return self._create_fallback_sprites(sprite_size)
+
 
     def _load_background_music(self):
-        try:
-            base_path = os.path.dirname(__file__)
-            music_path = os.path.join(base_path, '..', 'resources', 'sounds', 'background_sound.mp3')
+        base_path = os.path.dirname(__file__)
+        music_path = os.path.join(base_path, '..', 'resources', 'sounds', 'background_sound.mp3')
 
-            try:
-                pygame.mixer.music.load(music_path)
-            except:
-                music_path_wav = os.path.join(base_path, '..', 'resources', 'sounds', 'background_sound.wav')
-                pygame.mixer.music.load(music_path_wav)
+        pygame.mixer.music.load(music_path)
+        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.play(-1)
 
-            pygame.mixer.music.set_volume(0.3)
-            pygame.mixer.music.play(-1)
-            
-        except Exception as e:
-            print(f"Erro ao carregar música de fundo: {e}")
-    
     
     def _create_fallback_sprites(self, sprite_size):
         
@@ -254,11 +240,11 @@ class GameWorld:
         simple_surface.fill((0, 255, 0))
         
         fake_gif = AnimatedGif.__new__(AnimatedGif)
-        fake_gif.frames = [simple_surface]
-        fake_gif.frame_count = 1
-        fake_gif.current_frame = 0
-        fake_gif.frame_timer = 0
-        fake_gif.animation_speed = 5
+        fake_gif.m_frames = [simple_surface]
+        fake_gif.m_frame_count = 1
+        fake_gif.m_current_frame = 0
+        fake_gif.m_frame_timer = 0
+        fake_gif.m_animation_speed = 5
         
         return {
             'idle': fake_gif,
