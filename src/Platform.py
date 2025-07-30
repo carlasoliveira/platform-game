@@ -11,7 +11,7 @@ class Platform(ObjectStatic):
     def render(self, screen):
         pos = self.get_position()
         if self.image:
-            screen.blit(self.image, (int(pos.x), int(pos.y)))  # desenha a imagem
+            screen.blit(self.image, (int(pos.x), int(pos.y)))
         else:
             size = self.get_size()
             center = pos + (size / 2.0)

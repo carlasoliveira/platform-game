@@ -1,5 +1,6 @@
 from object import ObjectDynamic
 from collider import Collider
+from constants import gravity
 
 import pygame as pg
 from object import ObjectDynamic  
@@ -23,7 +24,6 @@ class Player(ObjectDynamic):
         self.m_move_to_left = False
         self.m_is_on_ground = False
         self.m_my_keys = my_keys  
-        self.gravity = 280.8
         self.m_player_type = player_type
         
 
@@ -60,7 +60,7 @@ class Player(ObjectDynamic):
         velocity = self.get_velocity()
         position = self._position
 
-        velocity.y += self.gravity * delta_time
+        velocity.y += gravity * delta_time
         position += velocity * delta_time
 
         self.set_velocity(velocity)
@@ -118,7 +118,7 @@ class Player(ObjectDynamic):
             ('jump.wav', 0.5, 'm_jump_sound'),
             ('collect.wav', 0.7, 'm_collect_sound'),
         ]
-        #  ('walk.wav', 0.3, 'm_walk_sound')
+        #  ('walk.wav', 0.3, 'm_walk_sound') Posso adicionar depois o som de caminhando
         for filename, volume, attribute in sounds_to_load:
                 sound_path = os.path.join(sounds_path, filename)
                 sound = pg.mixer.Sound(sound_path)

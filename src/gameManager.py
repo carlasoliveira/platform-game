@@ -1,5 +1,6 @@
 import pygame
 from gameWorld import GameWorld 
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 import os
 
 class GameManager:
@@ -7,7 +8,7 @@ class GameManager:
         pygame.init()
         pygame.mixer.init()
         
-        self.screen = pygame.display.set_mode((1280, 768))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Platform Game")
         self.world = GameWorld(self.screen)
         self.running = True
