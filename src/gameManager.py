@@ -1,19 +1,18 @@
 import pygame
 from gameWorld import GameWorld 
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 import os
 
 class GameManager:
     def __init__(self):
         pygame.init()
-        pygame.mixer.init()  # Inicializar mixer para música
+        pygame.mixer.init()
         
-        self.screen = pygame.display.set_mode((1280, 768))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Platform Game")
         self.world = GameWorld(self.screen)
         self.running = True
         self.last_time = pygame.time.get_ticks()
-        
-        # Carregar e tocar música de fundo
         self.world._load_background_music()
 
     def run(self):
@@ -22,7 +21,6 @@ class GameManager:
             delta_time = self._calculate_delta_time()
             self._draw()
             
-            # Verifica o teclado a cada frame, não apenas em eventos
             self.world.keyboard_events()
             self.world.update(delta_time)
             pygame.display.update()

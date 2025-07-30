@@ -1,15 +1,14 @@
 import pygame
-
 from object import ObjectStatic
 
-
-class Platform(ObjectStatic):
+class Decoration(ObjectStatic):
     def __init__(self, position, size, image=None):
         super().__init__(position, size)
         self.image = image
 
     def render(self, screen):
         pos = self.get_position()
+
         if self.image:
             screen.blit(self.image, (int(pos.x), int(pos.y)))
         else:
