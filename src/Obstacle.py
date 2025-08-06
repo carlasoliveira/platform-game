@@ -1,4 +1,4 @@
-import pygame
+import pygame as pg
 from Platform import Vector
 from Object import ObjectDynamic
 
@@ -6,7 +6,7 @@ from Object import ObjectDynamic
 class Obstacle(ObjectDynamic):
     def __init__(self, position: Vector, velocity: Vector, size: Vector, texture):
         super().__init__(position, size, texture, velocity)
-        print("Obstacle created.")
+        print("Obstaculo criado")
 
     def __del__(self):
         print("LIMPAR VARIAVEIS AQUI (Obstacle destruído)")
@@ -16,23 +16,20 @@ class Obstacle(ObjectDynamic):
         size = self.get_size()
         center = pos + (size / 2.0)
 
-        rect = pygame.Rect(
+        rect = pg.Rect(
             int(center.x - size.x / 2),
             int(center.y - size.y / 2),
             int(size.x),
             int(size.y)
         )
 
-        pygame.draw.rect(screen, (30, 30, 30), rect)
+        pg.draw.rect(screen, (30, 30, 30), rect)
 
     def update(self, delta_time: float):
         velocity = self.get_velocity()
         position = self.get_position()
 
-        # Aplica a gravidade à velocidade
-        # Multiplicar por delta_time 
-
-        # Atualiza a posição com base na velocidade
+		#Incluir o delta_time
         position.x += velocity.x * delta_time
         position.y += velocity.y * delta_time
 

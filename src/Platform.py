@@ -1,5 +1,5 @@
-import pygame
-
+import pygame as pg 
+ 
 from Object import ObjectStatic
 
 class Vector:
@@ -23,14 +23,14 @@ class Platform(ObjectStatic):
         size = self.get_size()
         center = pos + (size / 2.0)
 
-        rect = pygame.Rect(
+        rect = pg.Rect(
             int(center.x - size.x / 2),
             int(center.y - size.y / 2),
             int(size.x),
             int(size.y)
         )
 
-        pygame.draw.rect(screen, (30, 30, 30), rect)
+        pg.draw.rect(screen, (30, 30, 30), rect)
 
     def __del__(self):
         pass
