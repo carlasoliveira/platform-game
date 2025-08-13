@@ -1,17 +1,6 @@
 import pygame
 
-from Object import ObjectStatic
-
-class Vector:
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
-
-    def __add__(self, other):
-        return Vector(self.x + other.x, self.y + other.y)
-
-    def __truediv__(self, scalar):
-        return Vector(self.x / scalar, self.y / scalar)
+from object import ObjectStatic
 
 
 class Platform(ObjectStatic):
@@ -21,9 +10,8 @@ class Platform(ObjectStatic):
 
     def render(self, screen):
         pos = self.get_position()
-
         if self.image:
-            screen.blit(self.image, (int(pos.x), int(pos.y)))  # desenha a imagem
+            screen.blit(self.image, (int(pos.x), int(pos.y)))
         else:
             size = self.get_size()
             center = pos + (size / 2.0)
@@ -33,7 +21,7 @@ class Platform(ObjectStatic):
                 int(size.x),
                 int(size.y)
             )
-            pygame.draw.rect(screen, (30, 30, 30), rect)  # fallback se não tiver imagem
+            pygame.draw.rect(screen, (30, 30, 30), rect) 
 
     def __del__(self):
         pass
