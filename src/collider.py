@@ -67,7 +67,10 @@ class Collider:
         for collectible in collectibles:
             if not collectible.is_collected():
                 colliding, _ = self.check_collider(collectible, player)
-                if colliding and player.can_collect(collectible):
+                if colliding and collectible.get_type() == "key":
+                    points = collectible.collect()
+                    player.collect_points(points)
+                elif colliding and player.can_collect(collectible):
                     points = collectible.collect()
                     player.collect_points(points)
                     print(f"Pastor {player.get_player_type()} coletou {collectible.get_type()}! +{points} pontos")
@@ -141,19 +144,8 @@ class Collider:
 
     def _handle_door_collision(self, player, door, ds, abs_ds_x, abs_ds_y):
         """Trata colisão com porta - bloqueia se fechada"""
-        if not door.is_activated():  # Porta fechada - bloqueia
-            player_pos = player.get_position()
-            
-            if abs_ds_y <= abs_ds_x:
-                player_pos.y += ds.y
-                player.set_velocity(pg.math.Vector2(player.get_velocity().x, 0))
-                if ds.y < 0:
-                    player.m_is_on_ground = True
-            else:
-                player_pos.x += ds.x
-                player.set_velocity(pg.math.Vector2(0, player.get_velocity().y))
-            
-            player.set_position(player_pos)
+        print(f"Passou na Porta!")
+
         # Se porta está aberta (ativada), jogador passa através
 
     def _handle_pressure_plate_collision(self, player, plate):

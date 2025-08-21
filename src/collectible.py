@@ -6,6 +6,7 @@ from animated_gif import AnimatedGif
 class CollectibleType:
     BLACK_SHEEP = "black_sheep"
     WHITE_SHEEP = "white_sheep"
+    KEY = "key"
 
 class Collectible(ObjectStatic):
     def __init__(self, position, size, collectible_type, points=10):

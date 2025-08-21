@@ -47,7 +47,7 @@ class Puzze(ObjectDynamic):
                 self.m_image.fill(color)
             elif self.m_puzzle_type == PuzzleType.DOOR:
                 color = (100, 100, 100) if not self.m_is_activated else (200, 200, 200)
-                self.m_image.fill(color)
+                #self.m_image.fill(color)
             elif self.m_puzzle_type == PuzzleType.PRESSURE_PLATE:
                 color = (255, 255, 0) if self.m_is_activated else (150, 150, 0)
                 self.m_image.fill(color)

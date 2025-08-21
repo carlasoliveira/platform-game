@@ -30,14 +30,14 @@ class GameWorld:
             "2......................................1",
             "2......433333333333333333333333333333337",
             "2...3..................................1",
-            "65..........S..........................1",
-            "02s..................D.................1",
-            "0635...........................s.......1",
+            "65..........S........HI................1",
+            "02s..................FG................1",
+            "0635.................DE........s.......1",
             "000633333333333333333333333333335......1",
             "2......................................1",
-            "2..................................s.937",
-            "2.................................933700",
-            "2..B..B...Baa.......cebcfgh....933700000",
+            "2..........P........K......HI......s.937",
+            "2..........................FG.....933700",
+            "2..B..B...Baa.......cebcfghDE..933700000",
             "6333333333335.....9333333333333700000000",
             "0000000000002000001000000000000000000000",
             "0000000000002000001000000000000000000000",
@@ -167,6 +167,11 @@ class GameWorld:
                     size = pygame.math.Vector2(24, 24)
                     collectible = Collectible(position, size, CollectibleType.BLACK_SHEEP, points=10)
                     collectibles.append(collectible)
+                elif tile == "K":
+                    position = pygame.math.Vector2(x * TILE_SIZE + 4, y * TILE_SIZE + 4)
+                    size = pygame.math.Vector2(28, 28)
+                    collectible = Collectible(position, size, CollectibleType.KEY, points=0)
+                    collectibles.append(collectible)
         return collectibles
 
     def _load_puzzles(self):
@@ -194,6 +199,13 @@ class GameWorld:
                     velocity = pygame.math.Vector2(0, 0)
                     puzzle = Puzze(position, size, velocity, PuzzleType.DOOR)
                     puzzles.append(puzzle)
+
+                elif tile == "E":  # Porta
+                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+                    velocity = pygame.math.Vector2(0, 0)
+                    puzzle = Puzze(position, size, velocity, PuzzleType.DOOR)
+                    puzzles.append(puzzle)
                     
                 elif tile == "P":  # Placa de pressão
                     position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
@@ -208,18 +220,18 @@ class GameWorld:
         platforms = []
 
         plataform_tile_map = {
-            "0": self.get_sprite(self.tileset, 1, 8, 16), #tile_DIRT
-            "1": self.get_sprite(self.tileset, 0, 8, 16), #tile_DIRT_EDGE_LEFT
-            "2": self.get_sprite(self.tileset, 2, 8, 16), #tile_DIRT_EDGE_RIGHT
+            "0": self.get_sprite(self.tileset, 1, 12, 16), #tile_DIRT
+            "1": self.get_sprite(self.tileset, 0, 12, 16), #tile_DIRT_EDGE_LEFT
+            "2": self.get_sprite(self.tileset, 2, 12, 16), #tile_DIRT_EDGE_RIGHT
             
-            "3": self.get_sprite(self.tileset, 1, 7, 16), #tile_GRASS
-            "4": self.get_sprite(self.tileset, 0, 7, 16), #tile_GRASS_EDGE_LEFT
-            "5": self.get_sprite(self.tileset, 2, 7, 16), #tile_GRASS_EDGE_RIGHT
+            "3": self.get_sprite(self.tileset, 1, 11, 16), #tile_GRASS
+            "4": self.get_sprite(self.tileset, 0, 11, 16), #tile_GRASS_EDGE_LEFT
+            "5": self.get_sprite(self.tileset, 2, 11, 16), #tile_GRASS_EDGE_RIGHT
 
-            "6": self.get_sprite(self.tileset, 4, 8, 16), #tile_GRASS_EDGE_TOP_LEFT
-            "7": self.get_sprite(self.tileset, 5, 8, 16), #tile_GRASS_EDGE_TOP_RIGHT
-            "8": self.get_sprite(self.tileset, 9, 7, 16), #tile_GRASS_EDGE_TOP_RIGHT
-            "9": self.get_sprite(self.tileset, 7, 7, 16), #tile_GRASS_EDGE_TOP_RIGHT
+            "6": self.get_sprite(self.tileset, 4, 12, 16), #tile_GRASS_EDGE_TOP_LEFT
+            "7": self.get_sprite(self.tileset, 5, 12, 16), #tile_GRASS_EDGE_TOP_RIGHT
+            "8": self.get_sprite(self.tileset, 9, 12, 16), #tile_GRASS_EDGE_TOP_RIGHT
+            "9": self.get_sprite(self.tileset, 7, 11, 16), #tile_GRASS_EDGE_TOP_RIGHT
         }
 
         for y, row in enumerate(self.map):
@@ -246,6 +258,13 @@ class GameWorld:
             "f": self.get_sprite(self.tileset, 9, 11, 16), #tile_FENCE_1
             "g": self.get_sprite(self.tileset, 10, 11, 16), #tile_FENCE_2
             "h": self.get_sprite(self.tileset, 11, 11, 16), #tile_FENCE_3
+
+            "D": self.get_sprite(self.tileset, 2, 45, 16), #tile_DOOR_BOT_L
+            "E": self.get_sprite(self.tileset, 3, 45, 16), #tile_DOOR_BOT_R
+            "F": self.get_sprite(self.tileset, 2, 44, 16), #tile_DOOR_MID_L
+            "G": self.get_sprite(self.tileset, 3, 44, 16), #tile_DOOR_MID_R
+            "H": self.get_sprite(self.tileset, 2, 43, 16), #tile_DOOR_TOP_L
+            "I": self.get_sprite(self.tileset, 3, 43, 16), #tile_DOOR_TOP_R
         }
 
         for y, row in enumerate(self.map):
