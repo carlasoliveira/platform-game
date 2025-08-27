@@ -1,5 +1,6 @@
 import pygame as pg
 import math
+from constants import game_over
 
 class Collider:
     
@@ -73,29 +74,22 @@ class Collider:
                     print(f"Pastor {player.get_player_type()} coletou {collectible.get_type()}! +{points} pontos")
 
     def check_puzzle_collision(self, player, puzzles):
-        """Verifica colisões entre player e puzzles"""
         for puzzle in puzzles:
             colliding, ds = self.check_collider(puzzle, player)
             abs_ds_x = abs(ds.x)
             abs_ds_y = abs(ds.y)
 
             if colliding:
-                # Diferentes comportamentos para diferentes tipos de puzzle
                 if puzzle.get_puzzle_type() == "movable_block":
                     self._handle_movable_block_collision(player, puzzle, ds, abs_ds_x, abs_ds_y)
-                elif puzzle.get_puzzle_type() == "switch":
-                    self._handle_switch_collision(player, puzzle, ds, abs_ds_x, abs_ds_y)
                 elif puzzle.get_puzzle_type() == "door":
                     self._handle_door_collision(player, puzzle, ds, abs_ds_x, abs_ds_y)
-                elif puzzle.get_puzzle_type() == "pressure_plate":
-                    self._handle_pressure_plate_collision(player, puzzle)
 
     def _handle_movable_block_collision(self, player, block, ds, abs_ds_x, abs_ds_y):
-        """Trata colisão com bloco móvel - jogador pode empurrar"""
         player_pos = player.get_position()
         player_velocity = player.get_velocity()
         
-        if abs_ds_y <= abs_ds_x:  # Colisão vertical
+        if abs_ds_y <= abs_ds_x:
             player_pos.y += ds.y
             player.set_velocity(pg.math.Vector2(player_velocity.x, 0))
             
@@ -113,35 +107,14 @@ class Collider:
             push_velocity = pg.math.Vector2(push_direction * push_force, 0)
             block.push(push_velocity)
             
-            # Pequeno empurrão para o jogador também
             player_pos.x += ds.x * 0.1
             
         player.set_position(player_pos)
 
-    def _handle_switch_collision(self, player, switch, ds, abs_ds_x, abs_ds_y):
-        """Trata colisão com interruptor - ativar/desativar"""
-        # Jogador não atravessa o interruptor
-        player_pos = player.get_position()
-        
-        if abs_ds_y <= abs_ds_x:
-            player_pos.y += ds.y
-            player.set_velocity(pg.math.Vector2(player.get_velocity().x, 0))
-            if ds.y < 0:
-                player.m_is_on_ground = True
-        else:
-            player_pos.x += ds.x
-            player.set_velocity(pg.math.Vector2(0, player.get_velocity().y))
-        
-        player.set_position(player_pos)
-        
-        # Ativar interruptor se jogador está em cima
-        if ds.y < 0 and abs_ds_y <= abs_ds_x:
-            if switch.activate():
-                print(f"Interruptor ativado por {player.get_player_type()}!")
+
 
     def _handle_door_collision(self, player, door, ds, abs_ds_x, abs_ds_y):
-        """Trata colisão com porta - bloqueia se fechada"""
-        if not door.is_activated():  # Porta fechada - bloqueia
+        if not door.is_activated():
             player_pos = player.get_position()
             
             if abs_ds_y <= abs_ds_x:
@@ -154,15 +127,18 @@ class Collider:
                 player.set_velocity(pg.math.Vector2(0, player.get_velocity().y))
             
             player.set_position(player_pos)
-        # Se porta está aberta (ativada), jogador passa através
 
-    def _handle_pressure_plate_collision(self, player, plate):
-        """Trata colisão com placa de pressão - ativa enquanto jogador está em cima"""
-        if plate.activate():
-            print(f"Placa de pressão ativada por {player.get_player_type()}!")
 
     def resolve_puzzle_physics(self, puzzles, platforms):
-        """Resolve física dos puzzles (colisão com plataformas)"""
         for puzzle in puzzles:
-            if puzzle.can_be_pushed():  # Apenas blocos móveis têm física
+            if puzzle.can_be_pushed():
                 self.resolve_collision(puzzle, platforms)
+                
+    def resolve_lava_collision(self, player, lavas):
+        for lava in lavas:
+            colliding, _ = self.check_collider(lava, player)
+            if colliding:
+                player.current_animation = 'die'
+                player.set_velocity(pg.math.Vector2(0, 0))
+                return True
+        return False
