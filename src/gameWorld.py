@@ -86,6 +86,7 @@ class GameWorld:
         
         # Física dos puzzles
         self.collider.resolve_puzzle_physics(self.puzzles, self.platforms)
+        self.collider.resolve_collision_between_puzzles(self.puzzles)
 
 
     def update(self, delta_time):

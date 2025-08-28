@@ -19,13 +19,14 @@ class GameManager:
         while self.running:
             self._handle_events()
             delta_time = self._calculate_delta_time()
+            self.world.resolve_collisions()
             self._draw()
             
             self.world.keyboard_events()
             self.world.update(delta_time)
             pygame.display.update()
             self.world.clock.tick(60)
-            self.world.resolve_collisions()
+            
 
     def _handle_events(self):
         for event in pygame.event.get():

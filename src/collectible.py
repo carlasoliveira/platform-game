@@ -1,5 +1,5 @@
 import pygame as pg
-from object import ObjectStatic
+from Object import ObjectStatic
 import os
 from animated_gif import AnimatedGif
 
