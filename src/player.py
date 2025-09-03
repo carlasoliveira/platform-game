@@ -17,7 +17,6 @@ class Player(ObjectDynamic):
         super().__init__(position, size, velocity)
         self.sprites = sprites
         self.m_score = 0
-        self.m_lives = 3
         self.current_animation = 'idle'
         self.last_animation = 'idle'
         self.m_move_to_right = False
@@ -85,6 +84,8 @@ class Player(ObjectDynamic):
         teclas = pg.key.get_pressed()
         current_velocity = self.get_velocity()
 
+        if self.current_animation == 'die':
+                return
         if teclas[self.m_my_keys[Button.LEFT.value]]:
                 self.m_move_to_left = True
                 print("LEFT pressed")
