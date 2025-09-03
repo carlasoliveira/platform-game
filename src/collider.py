@@ -52,7 +52,7 @@ class Collider:
                 dyn_pos = dynamic_object.get_position()
 
                 if abs_ds_y <= abs_ds_x:
-                    dyn_pos.y += ds.y
+                    dyn_pos.y += ds.y 
                     dynamic_object.set_velocity(pg.math.Vector2(dynamic_object.get_velocity().x, 0))
 
                     if ds.y < 0:
@@ -107,7 +107,8 @@ class Collider:
             push_velocity = pg.math.Vector2(push_direction * push_force, 0)
             block.push(push_velocity)
             
-            player_pos.x += ds.x * 0.1
+            # Pequeno empurrão para o jogador também
+            player_pos.x += ds.x * 1
             
         player.set_position(player_pos)
 
@@ -142,3 +143,42 @@ class Collider:
                 player.set_velocity(pg.math.Vector2(0, 0))
                 return True
         return False
+
+    def resolve_collision_between_puzzles(self, puzzles):
+        """Resolve colisões entre puzzles"""
+        for i in range(len(puzzles)):
+            for j in range(i + 1, len(puzzles)):
+                puzzle_a = puzzles[i]
+                puzzle_b = puzzles[j]
+                
+                if puzzle_a.can_be_pushed() or puzzle_b.can_be_pushed():
+                    colliding, ds = self.check_collider(puzzle_a, puzzle_b)
+                    abs_ds_x = abs(ds.x)
+                    abs_ds_y = abs(ds.y)
+
+                    if colliding:
+                        if abs_ds_y <= abs_ds_x:
+                            # Colisão vertical
+                            if ds.y < 0: 
+                                puzzle_a_pos = puzzle_a.get_position() 
+                                puzzle_a_pos.y += (ds.y / 2.0)
+                                puzzle_a.set_position(puzzle_a_pos)
+                                puzzle_a.set_velocity(pg.math.Vector2(puzzle_a.get_velocity().x, 0))
+                            else:
+                                puzzle_b_pos = puzzle_b.get_position()
+                                puzzle_b_pos.y += (ds.y / 2.0) 
+                                puzzle_b.set_position(puzzle_b_pos)
+                                puzzle_b.set_velocity(pg.math.Vector2(puzzle_b.get_velocity().x, 0))
+                        else:
+                            # Colisão horizontal
+                            if ds.x < 0:
+                                puzzle_a_pos = puzzle_a.get_position()
+                                puzzle_a_pos.x += ds.x
+                                puzzle_a.set_position(puzzle_a_pos)
+                                puzzle_a.set_velocity(pg.math.Vector2(0, puzzle_a.get_velocity().y))
+                            else:
+                                puzzle_b_pos = puzzle_b.get_position()
+                                puzzle_b_pos.x += ds.x
+                                puzzle_b.set_position(puzzle_b_pos)
+                                puzzle_b.set_velocity(pg.math.Vector2(0, puzzle_b.get_velocity().y))
+    

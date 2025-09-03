@@ -1,6 +1,6 @@
 import pygame
 
-from object import ObjectStatic
+from Object import ObjectStatic
 
 
 class Platform(ObjectStatic):

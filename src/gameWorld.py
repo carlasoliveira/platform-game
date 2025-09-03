@@ -96,6 +96,10 @@ class GameWorld:
 
         self.collider.check_puzzle_collision(self.player1, self.puzzles)
         self.collider.check_puzzle_collision(self.player2, self.puzzles)
+        
+        # Física dos puzzles
+        self.collider.resolve_puzzle_physics(self.puzzles, self.platforms)
+        self.collider.resolve_collision_between_puzzles(self.puzzles)
 
         game_over1 = self.collider.resolve_lava_collision(
             self.player1, self.lavas)

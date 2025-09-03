@@ -1,9 +1,8 @@
-from object import ObjectDynamic
+from Object import ObjectDynamic
 from collider import Collider
 from constants import gravity
 
 import pygame as pg
-from object import ObjectDynamic  
 from enum import Enum
 import os
 

@@ -20,7 +20,6 @@ class GameManager:
         while self.running:
             self._handle_events()
             delta_time = self._calculate_delta_time()
-
             self._draw()
             if self.world.game_over:
                 self.world._draw_game_over()
