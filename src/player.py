@@ -69,7 +69,9 @@ class Player(ObjectDynamic):
     def collect_points(self, points):
         self.m_score += points
         
-        if self.m_collect_sound:
+        if points == 0:
+            self.m_key_sound.play()
+        elif self.m_collect_sound:
             self.m_collect_sound.play()
     
     def get_score(self):
@@ -117,6 +119,7 @@ class Player(ObjectDynamic):
         sounds_to_load = [
             ('jump.wav', 0.5, 'm_jump_sound'),
             ('collect.wav', 0.7, 'm_collect_sound'),
+            ('key.wav', 0.7, 'm_key_sound'),
         ]
         #  ('walk.wav', 0.3, 'm_walk_sound') Posso adicionar depois o som de caminhando
         for filename, volume, attribute in sounds_to_load:
