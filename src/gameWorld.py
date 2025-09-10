@@ -18,30 +18,30 @@ class GameWorld:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
         self.map = [
-            "2......................................1",
-            "2......................................1",
-            "2........#.............................1",
-            "2......................................1",
-            "2.........@.........!..................1",
-            "2...........HI.........................1",
-            "2...........FG.....................K...1",
-            "2...........DE..w........f.............1",
-            "2.....W3333333333333333333335..........1",
-            "65.....XYYYY000000000000000065.........1",
-            "02..........XYYYYYYYYYYYYY00063333333337",
-            "02........................XY000000YYYY00",
+            "2..................................40000",
+            "2.................................470000",
+            "2........#.......................4700000",
+            "2................................1000000",
+            "2.....%...@..........!...........100YY00",
+            "2...........HI...................10Z(.X0",
+            "2...........FG...................XZ.)..1",
+            "2........d.wDE../...$..a./.....B.....K.1",
+            "2s...W33333333333333333333335.b........1",
+            "65....XYYYY00000000000000000633335843337",
+            "02.........XYYYYYYYYYYYYYY00000000000000",
+            "02e.......................XY000000YYYY00",
             "065.........................1000YZ....X0",
-            "002..........B...............XYZ.......1",
-            "0065.................................w.1",
-            "000635....W333333U.................W3330",
-            "00YYYZ....XYYYYYZ...................XYY0",
-            "0Z..................43335..4335........1",
+            "002b.........B.......%.......XYZ.......1",
+            "0065a......a.cb.....................awe1",
+            "000635....W333333U..........B......W3330",
+            "00YYYZ....XYYYYYZ....bd.e....a......XYY0",
+            "0Z..................43335..4335d.......1",
             "2...................XYYYZ..XYYYU.......1",
             "2......................................1",
-            "2.s....................................1",
-            "635.............f.................433337",
-            "002............43333335..bse.43333700000",
-            "0063358888884337000000633333370000000000",
+            "2as.........*......................f...1",
+            "635.............f...ab.........a..433337",
+            "002d........w..43333335..bse.43333700000",
+            "0063588888843337000000633333370000000000",
         ]
 
         self.background = self._load_background()
@@ -597,12 +597,21 @@ class GameWorld:
 
             "d": self.get_sprite(self.tileset, 11, 12, 16),  # tile_FLOWERS_1
             "e": self.get_sprite(self.tileset, 11, 13, 16),  # tile_FLOWERS_2
+            
+            "$": self.get_sprite(self.tileset, 9, 14, 16),
+
+            "(": self.get_sprite(self.tileset, 16, 10, 16),  # tile_BLOCK_LAMP_1
+            ")": self.get_sprite(self.tileset, 17, 12, 16),  # tile_BLOCK_LAMP_2
 
             "f": self._make_decoration_block_auto((9, 11), 3, 1),
+            "/": self._make_decoration_block_auto((21, 31), 3, 1),
 
             "@": self._make_decoration_block_auto((10, 35), 8, 4), # tile_block_WALLS
             "#": self._make_decoration_block_auto((0, 31), 10, 2), # tile_block_ROOF
             "!": self._make_decoration_block_auto((17, 23), 4, 4), # tile_block_POÇO
+
+            "%": self._make_decoration_block_auto((44, 29), 3, 4), # tile_block_TREE-1
+            "*": self._make_decoration_block_auto((43, 33), 3, 3), # tile_block_LOG
         }
 
         for y, row in enumerate(self.map):
@@ -620,6 +629,15 @@ class GameWorld:
                     elif tile_char == "f":
                         img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
                         size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                    elif tile_char == "/":
+                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                        size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                    elif tile_char == "%":
+                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 4 * TILE_SIZE))
+                        size = pygame.math.Vector2(3 * TILE_SIZE, 4 * TILE_SIZE)
+                    elif tile_char == "*":
+                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 3 * TILE_SIZE))
+                        size = pygame.math.Vector2(3 * TILE_SIZE, 3 * TILE_SIZE)
                     elif tile_char == "!":
                         img = pygame.transform.scale(block_surface, (4 * TILE_SIZE, 4 * TILE_SIZE))
                         size = pygame.math.Vector2(4 * TILE_SIZE, 4 * TILE_SIZE)
