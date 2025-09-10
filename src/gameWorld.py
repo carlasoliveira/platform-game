@@ -20,30 +20,28 @@ class GameWorld:
         self.map = [
             "2......................................1",
             "2......................................1",
+            "2........#.............................1",
             "2......................................1",
-            "2................w.....................1",
-            "2...3..433333333333333333333333333333337",
+            "2.........@.........!..................1",
+            "2...........HI.........................1",
+            "2...........FG.....................K...1",
+            "2...........DE..w........f.............1",
+            "2.....W3333333333333333333335..........1",
+            "65.....XYYYY000000000000000065.........1",
+            "02..........XYYYYYYYYYYYYY00063333333337",
+            "02........................XY000000YYYY00",
+            "065.........................1000YZ....X0",
+            "002..........B...............XYZ.......1",
+            "0065.................................w.1",
+            "000635....W333333U.................W3330",
+            "00YYYZ....XYYYYYZ...................XYY0",
+            "0Z..................43335..4335........1",
+            "2...................XYYYZ..XYYYU.......1",
             "2......................................1",
-            "2...w..........B......................w1",
-            "65cfgh........433335..................47",
-            "633333333333333333333333333333335...3..1",
-            "2......................................1",
-            "2...............................3......1",
-            "2....435..............................31",
-            "2......................................1",
-            "2......4333..........3333333333333333337",
-            "2...3..................................1",
-            "65.....................................1",
-            "02s....................................1",
-            "0635...........................s.......1",
-            "000633335....435...43333333333335......1",
-            "2..................K......HI...........1",
-            "2.........................FG.......s.937",
-            "2...B..B........cebcfgh...DE......933700",
-            "633333335122..43333333333333333333700000",
-            "0000000008888800000000000000000000000000",
-            "0000000000000000000000000000000000000000",
-            "0000000000000000000000000000000000000000",
+            "2.s....................................1",
+            "635.............f.................433337",
+            "002............43333335..bse.43333700000",
+            "0065888888884337000000633333370000000000",
         ]
 
         self.background = self._load_background()
@@ -60,9 +58,22 @@ class GameWorld:
         self.collider = Collider()
         self.game_over = False
         self.has_key = False  # Variável para registrar se a chave foi coletada
+        
+        # Variáveis para controle da porta
+        self.door_opening = False  # Flag para indicar se a porta está sendo aberta
+        self.door_open_timer = 0.0  # Timer para delay de abertura da porta
+        self.door_open_delay = 0.3  # Delay de 0.3s para abrir a porta
+        
+        # Variáveis para detecção de vitória
+        self.both_players_at_door_timer = 0.0  # Timer para ambos jogadores na porta
+        self.victory_timer_threshold = 1.5  # 1.5 segundos para vitória
+        self.victory_achieved = False  # Flag de vitória
+        
+        # Carrega sons
+        self._load_door_sound()
 
         self.player1 = Player(
-            position=pygame.math.Vector2(100, 580),
+            position=pygame.math.Vector2(568, 620),
             sprites=self.player_sprites2,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
@@ -71,7 +82,7 @@ class GameWorld:
         )
 
         self.player2 = Player(
-            position=pygame.math.Vector2(50, 580),
+            position=pygame.math.Vector2(650, 620),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
@@ -116,7 +127,7 @@ class GameWorld:
 
     def _check_door_interactions(self):
         """Verifica se algum jogador tocou na porta e abre se tiver a chave"""
-        if self.has_key:
+        if self.has_key and not self.door_opening:
             # Verifica se alguma porta foi tocada
             door_touched = False
             for door in self.doors:
@@ -129,16 +140,63 @@ class GameWorld:
                     door_touched = True
                     break
             
-            # Se alguma parte da porta foi tocada, abre todos os tiles da porta
+            # Se alguma parte da porta foi tocada, inicia o processo de abertura
             if door_touched:
-                for door in self.doors:
-                    if not door.get_is_open():
-                        door.open_door()
-                print("Porta aberta com a chave!")
+                # Toca o som
+                if self.door_sound:
+                    self.door_sound.play()
+                
+                # Inicia o timer de abertura
+                self.door_opening = True
+                self.door_open_timer = 0.0
+                print("Porta sendo aberta com a chave...")
+
+    def _check_victory_condition(self, delta_time):
+        """Verifica se ambos jogadores estão na porta aberta por 1.5s"""
+        # Primeiro verifica se pelo menos uma porta está aberta
+        any_door_open = any(door.get_is_open() for door in self.doors)
+        
+        if not any_door_open:
+            self.both_players_at_door_timer = 0.0
+            return
+        
+        # Verifica se ambos jogadores estão tocando em qualquer porta aberta
+        player1_at_door = False
+        player2_at_door = False
+        
+        for door in self.doors:
+            if door.get_is_open():
+                colliding1, _ = self.collider.check_collider(door, self.player1)
+                colliding2, _ = self.collider.check_collider(door, self.player2)
+                
+                if colliding1:
+                    player1_at_door = True
+                if colliding2:
+                    player2_at_door = True
+        
+        # Verifica se ambos jogadores estão no chão (não pulando)
+        player1_on_ground = self.player1.m_is_on_ground
+        player2_on_ground = self.player2.m_is_on_ground
+        
+        # Se ambos estão na porta e no chão, incrementa o timer
+        if player1_at_door and player2_at_door and player1_on_ground and player2_on_ground:
+            self.both_players_at_door_timer += delta_time
+            
+            if self.both_players_at_door_timer >= self.victory_timer_threshold:
+                self.victory_achieved = True
+                print("Vitoria! !")
+        else:
+            # Reset o timer se a condição não for atendida
+            self.both_players_at_door_timer = 0.0
 
     def reset_game_state(self):
         """Reseta o estado do jogo, incluindo chave e portas"""
         self.has_key = False
+        self.door_opening = False
+        self.door_open_timer = 0.0
+        self.both_players_at_door_timer = 0.0
+        self.victory_achieved = False
+        
         # Fecha todas as portas
         for door in self.doors:
             door.close_door()
@@ -149,6 +207,21 @@ class GameWorld:
 
         for puzzle in self.puzzles:
             puzzle.update(delta_time)
+        
+        # Atualiza timer de abertura da porta
+        if self.door_opening:
+            self.door_open_timer += delta_time
+            if self.door_open_timer >= self.door_open_delay:
+                # Abre todas as portas após o delay
+                for door in self.doors:
+                    if not door.get_is_open():
+                        door.open_door()
+                self.door_opening = False
+                self.door_open_timer = 0.0
+        
+        # Verifica se ambos jogadores estão na porta (quando ela estiver aberta)
+        if self.has_key and not self.victory_achieved:
+            self._check_victory_condition(delta_time)
 
     def keyboard_events(self):
         self.player1.verify_keyboard()
@@ -160,6 +233,10 @@ class GameWorld:
         self.draw_score()
         self.player1.render(self.screen)
         self.player2.render(self.screen)
+        
+        # Desenha popup de vitória se necessário
+        if self.victory_achieved:
+            self._draw_victory()
 
     def draw_background(self):
         self.screen.blit(self.background, (0, 0))
@@ -186,6 +263,43 @@ class GameWorld:
         score2_text = self.font.render(
             f"Pastor (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
         self.screen.blit(score2_text, (10, 50))
+        
+        # Desenha indicador de chave
+        if self.has_key:
+            key_text = self.font.render("CHAVE COLETADA!", True, (255, 255, 0))
+            self.screen.blit(key_text, (10, 90))
+        
+        # Desenha barra de progresso para vitória
+        if self.both_players_at_door_timer > 0 and not self.victory_achieved:
+            progress = min(self.both_players_at_door_timer / self.victory_timer_threshold, 1.0)
+            self._draw_victory_progress(progress)
+
+    def _draw_victory_progress(self, progress):
+        """Desenha barra de progresso para vitória"""
+        # Texto indicativo
+        progress_text = self.instruction_font.render(
+            "Ambos na porta! Aguarde...", True, (255, 255, 0))
+        text_rect = progress_text.get_rect(center=(SCREEN_WIDTH // 2, 150))
+        self.screen.blit(progress_text, text_rect)
+        
+        # Barra de progresso
+        bar_width = 300
+        bar_height = 20
+        bar_x = (SCREEN_WIDTH - bar_width) // 2
+        bar_y = 170
+        
+        # Fundo da barra
+        background_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
+        pygame.draw.rect(self.screen, (100, 100, 100), background_rect)
+        
+        # Progresso da barra
+        progress_width = int(bar_width * progress)
+        progress_rect = pygame.Rect(bar_x, bar_y, progress_width, bar_height)
+        color = (255, 255 - int(progress * 255), 0)  # Amarelo para verde
+        pygame.draw.rect(self.screen, color, progress_rect)
+        
+        # Borda da barra
+        pygame.draw.rect(self.screen, (255, 255, 255), background_rect, 2)
 
     def _draw_game_over(self):
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -224,6 +338,53 @@ class GameWorld:
             "Press ESC to Quit", True, (200, 200, 200))
         quit_rect = quit_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70))
+        self.screen.blit(quit_text, quit_rect)
+
+    def _draw_victory(self):
+        """Desenha a tela de vitória"""
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        overlay.set_alpha(180)
+        overlay.fill((0, 50, 0))  # Verde escuro para vitória
+        self.screen.blit(overlay, (0, 0))
+
+        # Texto principal "VITÓRIA!"
+        title_text = self.title_font.render("VITÓRIA!", True, (50, 255, 50))
+        title_rect = title_text.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+        self.screen.blit(title_text, title_rect)
+
+        # Texto de fase completada
+        stage_text = self.subtitle_font.render(
+            "Fase Completada!", True, (255, 255, 255))
+        stage_rect = stage_text.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30))
+        self.screen.blit(stage_text, stage_rect)
+
+        # Texto de pontuação final
+        score1_text = self.instruction_font.render(
+            f"Pastor (Brancas): {self.player1.get_score()}", True, (255, 255, 255))
+        score1_rect = score1_text.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
+        self.screen.blit(score1_text, score1_rect)
+
+        score2_text = self.instruction_font.render(
+            f"Pastor (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
+        score2_rect = score2_text.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40))
+        self.screen.blit(score2_text, score2_rect)
+
+        # Instruções para continuar
+        restart_text = self.instruction_font.render(
+            "Press R to Restart", True, (200, 200, 200))
+        restart_rect = restart_text.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 80))
+        self.screen.blit(restart_text, restart_rect)
+
+        # Instruções para sair
+        quit_text = self.instruction_font.render(
+            "Press ESC to Quit", True, (200, 200, 200))
+        quit_rect = quit_text.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 110))
         self.screen.blit(quit_text, quit_rect)
 
     def _load_background(self):
@@ -305,24 +466,25 @@ class GameWorld:
         platforms = []
 
         plataform_tile_map = {
-            "0": self.get_sprite(self.tileset, 1, 8, 16),  # tile_DIRT
-            # tile_DIRT_EDGE_LEFT
-            "1": self.get_sprite(self.tileset, 0, 8, 16),
-            # tile_DIRT_EDGE_RIGHT
-            "2": self.get_sprite(self.tileset, 2, 8, 16),
+            "0": self.get_sprite(self.tileset, 1, 8, 16), # tile_DIRT
+            "1": self.get_sprite(self.tileset, 0, 8, 16), # tile_DIRT_EDGE_LEFT
+            "2": self.get_sprite(self.tileset, 2, 8, 16), # tile_DIRT_EDGE_RIGHT
 
-            "3": self.get_sprite(self.tileset, 1, 7, 16),  # tile_GRASS
-            # tile_GRASS_EDGE_LEFT
-            "4": self.get_sprite(self.tileset, 0, 7, 16),
-            # tile_GRASS_EDGE_RIGHT
-            "5": self.get_sprite(self.tileset, 2, 7, 16),
+            "3": self.get_sprite(self.tileset, 1, 7, 16), # tile_GRASS
+            "4": self.get_sprite(self.tileset, 0, 7, 16), # tile_GRASS_EDGE_LEFT
+            "5": self.get_sprite(self.tileset, 2, 7, 16), # tile_GRASS_EDGE_RIGHT
 
-            # tile_GRASS_EDGE_TOP_LEFT
-            "6": self.get_sprite(self.tileset, 4, 8, 16),
-            # tile_GRASS_EDGE_TOP_RIGHT
-            "7": self.get_sprite(self.tileset, 5, 8, 16),
-            # tile_GRASS_EDGE_TOP_RIGHT
-            "9": self.get_sprite(self.tileset, 7, 7, 16),
+            "W": self.get_sprite(self.tileset, 0, 10, 16), # tile_ONLY_GRASS_LEFT
+            "U": self.get_sprite(self.tileset, 2, 10, 16), # tile_ONLY_GRASS_RIGHT
+            "V": self.get_sprite(self.tileset, 1, 10, 16), # tile_ONLY_GRASS_CENTER
+
+            
+            "6": self.get_sprite(self.tileset, 4, 8, 16), # tile_GRASS_EDGE_TOP_RIGHT
+            "7": self.get_sprite(self.tileset, 5, 8, 16), # tile_GRASS_EDGE_TOP_LEFT
+
+            "X": self.get_sprite(self.tileset, 0, 9, 16), # tile_DIRT_BOTTOM_LEFT
+            "Y": self.get_sprite(self.tileset, 1, 9, 16), # tile_DIRT_BOTTOM
+            "Z": self.get_sprite(self.tileset, 2, 9, 16), # tile_DIRT_BOTTOM_right
         }
 
         for y, row in enumerate(self.map):
@@ -348,22 +510,53 @@ class GameWorld:
             "d": self.get_sprite(self.tileset, 11, 12, 16),  # tile_FLOWERS_1
             "e": self.get_sprite(self.tileset, 11, 13, 16),  # tile_FLOWERS_2
 
-            "f": self.get_sprite(self.tileset, 9, 11, 16), #tile_FENCE_1
-            "g": self.get_sprite(self.tileset, 10, 11, 16), #tile_FENCE_2
-            "h": self.get_sprite(self.tileset, 11, 11, 16), #tile_FENCE_3
+            "f": self._make_decoration_block_auto((9, 11), 3, 1),
+
+            "@": self._make_decoration_block_auto((10, 35), 8, 4), # tile_block_WALLS
+            "#": self._make_decoration_block_auto((0, 31), 10, 2), # tile_block_ROOF
+            "!": self._make_decoration_block_auto((17, 23), 4, 4), # tile_block_POÇO
         }
 
         for y, row in enumerate(self.map):
             for x, tile_char in enumerate(row):
                 if tile_char in decoration_tile_map:
-                    img = pygame.transform.scale(
-                        decoration_tile_map[tile_char], (TILE_SIZE, TILE_SIZE))
-                    position = pygame.math.Vector2(
-                        x * TILE_SIZE, y * TILE_SIZE)
-                    size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+                    block_surface = decoration_tile_map[tile_char]
+
+                    # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
+                    if tile_char == "@":
+                        img = pygame.transform.scale(block_surface, (8 * TILE_SIZE, 4 * TILE_SIZE))
+                        size = pygame.math.Vector2(8 * TILE_SIZE, 4 * TILE_SIZE)
+                    elif tile_char == "#":
+                        img = pygame.transform.scale(block_surface, (10 * TILE_SIZE, 2 * TILE_SIZE))
+                        size = pygame.math.Vector2(10 * TILE_SIZE, 2 * TILE_SIZE)
+                    elif tile_char == "f":
+                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                        size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                    elif tile_char == "!":
+                        img = pygame.transform.scale(block_surface, (4 * TILE_SIZE, 4 * TILE_SIZE))
+                        size = pygame.math.Vector2(4 * TILE_SIZE, 4 * TILE_SIZE)
+                    else:
+                        img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
+                        size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+
+                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
                     decorations.append(Decoration(position, size, img))
 
         return decorations
+
+
+    def _make_decoration_block_auto(self, start_tile, block_width, block_height, tile_size=16):
+        block_surface = pygame.Surface((block_width * tile_size, block_height * tile_size), pygame.SRCALPHA)
+
+        start_x, start_y = start_tile
+        for row in range(block_height):
+            for col in range(block_width):
+                tx = start_x + col
+                ty = start_y + row
+                img = self.get_sprite(self.tileset, tx, ty, tile_size)  # usa 16 aqui
+                block_surface.blit(img, (col * tile_size, row * tile_size))
+
+        return block_surface
 
     def _load_doors(self):
         from door import Door
@@ -455,6 +648,16 @@ class GameWorld:
             'run_left': run_left_gif,
             'die': die_gif
         }
+
+    def _load_door_sound(self):
+        """Carrega o som para quando a porta é ativada"""
+        try:
+            base_path = os.path.dirname(__file__)
+            sound_path = os.path.join(base_path, '..', 'resources', 'sounds', 'key.wav')
+            self.door_sound = pygame.mixer.Sound(sound_path)
+            self.door_sound.set_volume(0.7)
+        except:
+            self.door_sound = None
 
     def _load_background_music(self):
         base_path = os.path.dirname(__file__)
