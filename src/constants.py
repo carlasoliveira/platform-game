@@ -1,6 +1,6 @@
 # Constantes físicas do jogo
 gravity = 280.8  # Força da gravidade (pixels/segundo²)
-
+game_over = 1
 # Constantes de tela
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 768
