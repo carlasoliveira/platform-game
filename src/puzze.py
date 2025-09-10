@@ -10,14 +10,14 @@ class PuzzleType:
     PRESSURE_PLATE = "pressure_plate"
 
 class Puzze(ObjectDynamic):
-    def __init__(self, position, size, velocity, puzzle_type=PuzzleType.MOVABLE_BLOCK):
+    def __init__(self, position, size, velocity, puzzle_type=PuzzleType.MOVABLE_BLOCK, image=None):
         super().__init__(position, size, velocity)
         self.m_puzzle_type = puzzle_type
         self.m_is_activated = False
         self.m_can_be_pushed = puzzle_type == PuzzleType.MOVABLE_BLOCK
         self.m_is_being_pushed = False
         self.m_push_resistance = 0.8
-        self.m_image = None
+        self.m_image = image
         self._load_image()
 
     def _load_image(self):
@@ -26,7 +26,7 @@ class Puzze(ObjectDynamic):
             
 
             if self.m_puzzle_type == PuzzleType.MOVABLE_BLOCK:
-                image_path = os.path.join(base_path, '..', 'resources', 'graphics', 'movable_block.png')
+                image_path = os.path.join(base_path, '..', 'resources', 'graphics', 'obstaculo.png')
             elif self.m_puzzle_type == PuzzleType.SWITCH:
                 image_path = os.path.join(base_path, '..', 'resources', 'graphics', 'switch.png')
             elif self.m_puzzle_type == PuzzleType.DOOR:

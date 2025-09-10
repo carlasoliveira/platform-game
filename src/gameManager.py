@@ -3,7 +3,6 @@ from gameWorld import GameWorld
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 import os
 
-
 class GameManager:
     def __init__(self):
         pygame.init()
@@ -20,7 +19,6 @@ class GameManager:
         while self.running:
             self._handle_events()
             delta_time = self._calculate_delta_time()
-
             self._draw()
             if self.world.game_over:
                 self.world._draw_game_over()
