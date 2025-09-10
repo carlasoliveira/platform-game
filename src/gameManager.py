@@ -3,7 +3,6 @@ from gameWorld import GameWorld
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 import os
 
-
 class GameManager:
     def __init__(self):
         pygame.init()
