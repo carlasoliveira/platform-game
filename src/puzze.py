@@ -10,7 +10,7 @@ class PuzzleType:
     PRESSURE_PLATE = "pressure_plate"
 
 class Puzze(ObjectDynamic):
-    def __init__(self, position, size, velocity, puzzle_type=PuzzleType.MOVABLE_BLOCK):
+    def __init__(self, position, size, velocity, puzzle_type=PuzzleType.MOVABLE_BLOCK, custom_image=None):
         super().__init__(position, size, velocity)
         self.m_puzzle_type = puzzle_type
         self.m_is_activated = False
@@ -18,9 +18,15 @@ class Puzze(ObjectDynamic):
         self.m_is_being_pushed = False
         self.m_push_resistance = 0.8
         self.m_image = None
+        self.m_custom_image = custom_image
         self._load_image()
 
     def _load_image(self):
+        # Se uma imagem customizada foi fornecida, use-a
+        if self.m_custom_image is not None:
+            self.m_image = self.m_custom_image
+            return
+            
         try:
             base_path = os.path.dirname(__file__)
             

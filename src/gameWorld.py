@@ -41,7 +41,7 @@ class GameWorld:
             "2.s....................................1",
             "635.............f.................433337",
             "002............43333335..bse.43333700000",
-            "0065888888884337000000633333370000000000",
+            "0063358888884337000000633333370000000000",
         ]
 
         self.background = self._load_background()
@@ -68,6 +68,9 @@ class GameWorld:
         self.both_players_at_door_timer = 0.0  # Timer para ambos jogadores na porta
         self.victory_timer_threshold = 1.5  # 1.5 segundos para vitória
         self.victory_achieved = False  # Flag de vitória
+        
+        # Lista para plataformas criadas dinamicamente (caixas que caíram na lava)
+        self.dynamic_platforms = []
         
         # Carrega sons
         self._load_door_sound()
@@ -99,8 +102,11 @@ class GameWorld:
 
     def resolve_collisions(self):
 
-        self.collider.resolve_collision(self.player1, self.platforms)
-        self.collider.resolve_collision(self.player2, self.platforms)
+        # Combina plataformas estáticas com as dinâmicas
+        all_platforms = self.platforms + self.dynamic_platforms
+        
+        self.collider.resolve_collision(self.player1, all_platforms)
+        self.collider.resolve_collision(self.player2, all_platforms)
 
         key_collected1 = self.collider.check_collectible_collision(
             self.player1, self.collectibles)
@@ -123,7 +129,10 @@ class GameWorld:
             self.player2, self.lavas)
         self.game_over = game_over1 or game_over2
 
-        self.collider.resolve_puzzle_physics(self.puzzles, self.platforms)
+        self.collider.resolve_puzzle_physics(self.puzzles, all_platforms)
+        
+        # Verifica se alguma caixa (puzzle) caiu na lava
+        self._check_puzzle_lava_collision()
 
     def _check_door_interactions(self):
         """Verifica se algum jogador tocou na porta e abre se tiver a chave"""
@@ -150,6 +159,50 @@ class GameWorld:
                 self.door_opening = True
                 self.door_open_timer = 0.0
                 print("Porta sendo aberta com a chave...")
+
+    def _check_puzzle_lava_collision(self):
+        """Verifica se alguma caixa caiu na lava e a converte em plataforma"""
+        puzzles_to_remove = []
+        
+        for puzzle in self.puzzles:
+            for lava in self.lavas:
+                # Verifica se a caixa está colidindo com a lava
+                colliding, _ = self.collider.check_collider(puzzle, lava)
+                if colliding:
+                    # Usa a posição da lava para alinhar perfeitamente a plataforma
+                    lava_pos = lava.get_position()
+                    lava_size = lava.get_size()
+                    
+                    # Cria uma versão queimada da imagem da caixa
+                    if hasattr(puzzle, 'm_image') and puzzle.m_image is not None:
+                        # Cria uma cópia da imagem da caixa
+                        burned_image = puzzle.m_image.copy()
+                        
+                        # Cria uma superfície escura para simular queimadura
+                        dark_overlay = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                        dark_overlay.set_alpha(100)  # Semi-transparente
+                        dark_overlay.fill((0, 0, 0))  # Preto
+                        
+                        # Aplica o overlay escuro por cima da imagem original
+                        burned_image.blit(dark_overlay, (0, 0))
+                        platform_img = burned_image
+                    else:
+                        # Fallback para sprite de terra se não tiver imagem
+                        platform_sprite = self.get_sprite(self.tileset, 1, 8, 16)
+                        platform_img = pygame.transform.scale(platform_sprite, (TILE_SIZE, TILE_SIZE))
+                    
+                    # Cria a nova plataforma na posição da lava para perfeito alinhamento
+                    new_platform = Platform(lava_pos, lava_size, platform_img)
+                    self.dynamic_platforms.append(new_platform)
+                    
+                    # Remove a caixa da lista de puzzles
+                    puzzles_to_remove.append(puzzle)
+                    break  # Sai do loop da lava para este puzzle
+        
+        # Remove as caixas que caíram na lava
+        for puzzle in puzzles_to_remove:
+            if puzzle in self.puzzles:
+                self.puzzles.remove(puzzle)
 
     def _check_victory_condition(self, delta_time):
         """Verifica se ambos jogadores estão na porta aberta por 1.5s"""
@@ -207,6 +260,11 @@ class GameWorld:
 
         for puzzle in self.puzzles:
             puzzle.update(delta_time)
+            
+        # Update lava animations
+        delta_time_ms = delta_time * 1000  # Convert seconds to milliseconds
+        for lava in self.lavas:
+            lava.update(delta_time_ms)
         
         # Atualiza timer de abertura da porta
         if self.door_opening:
@@ -244,6 +302,12 @@ class GameWorld:
     def draw_tiles(self):
         for platform in self.platforms:
             platform.render(self.screen)
+        # Renderiza plataformas dinâmicas antes da lava (para aparecer através da transparência)
+        for platform in self.dynamic_platforms:
+            platform.render(self.screen)
+        # Renderiza lava por cima (com transparência)
+        for lava in self.lavas:
+            lava.render(self.screen)
         for decoration in self.decorations:
             decoration.render(self.screen)
         for door in self.doors:
@@ -252,8 +316,6 @@ class GameWorld:
             collectible.render(self.screen)
         for puzzle in self.puzzles:
             puzzle.render(self.screen)
-        for lava in self.lavas:
-            lava.render(self.screen)
 
     def draw_score(self):
         score1_text = self.font.render(
@@ -435,20 +497,46 @@ class GameWorld:
 
     def _load_lava(self):
         lavas = []
+        
+        # Try to load animated gif first
+        try:
+            lava_gif_path = os.path.join("resources", "graphics", "lava.gif")
+            lava_animated_gif = AnimatedGif(lava_gif_path, scale_size=(TILE_SIZE, TILE_SIZE))
+        except:
+            lava_animated_gif = None
+            
+        # Fallback to tileset sprite
         pixel = self.get_sprite(self.tileset, 1, 46, 8)
+        
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == "8":
-                    img = pygame.transform.scale(pixel, (TILE_SIZE, TILE_SIZE))
                     position = pygame.math.Vector2(
                         x * TILE_SIZE, y * TILE_SIZE)
                     size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
-                    lava = Lava(position, size, img)
+                    
+                    if lava_animated_gif:
+                        # Create lava with animated gif
+                        lava = Lava(position, size, None, lava_animated_gif)
+                    else:
+                        # Fallback to static image
+                        img = pygame.transform.scale(pixel, (TILE_SIZE, TILE_SIZE))
+                        lava = Lava(position, size, img, None)
+                    
                     lavas.append(lava)
         return lavas
 
     def _load_puzzles(self):
         puzzles = []
+        
+        # Carrega a textura da caixa
+        try:
+            box_image = pygame.image.load(os.path.join("resources", "graphics", "obstaculo.png"))
+            box_image = pygame.transform.scale(box_image, (TILE_SIZE, TILE_SIZE))
+        except:
+            # Fallback para sprite do tileset se não conseguir carregar a imagem
+            box_sprite = self.get_sprite(self.tileset, 1, 8, 16)
+            box_image = pygame.transform.scale(box_sprite, (TILE_SIZE, TILE_SIZE))
 
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
@@ -458,7 +546,7 @@ class GameWorld:
                     size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
                     velocity = pygame.math.Vector2(0, 0)
                     puzzle = Puzze(position, size, velocity,
-                                   PuzzleType.MOVABLE_BLOCK)
+                                   PuzzleType.MOVABLE_BLOCK, box_image)
                     puzzles.append(puzzle)
         return puzzles
 
