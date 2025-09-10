@@ -5,7 +5,7 @@ from animated_gif import AnimatedGif
 from collider import Collider
 from collectible import Collectible
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, PLAYER_SPEED, JUMP_SPEED
-from Decoration import Decoration
+from decoration import Decoration
 from lava import Lava
 from Platform import Platform
 from player import Player
@@ -58,20 +58,20 @@ class GameWorld:
         self.collider = Collider()
         self.game_over = False
         self.has_key = False  # Variável para registrar se a chave foi coletada
-        
+
         # Variáveis para controle da porta
         self.door_opening = False  # Flag para indicar se a porta está sendo aberta
         self.door_open_timer = 0.0  # Timer para delay de abertura da porta
         self.door_open_delay = 0.3  # Delay de 0.3s para abrir a porta
-        
+
         # Variáveis para detecção de vitória
         self.both_players_at_door_timer = 0.0  # Timer para ambos jogadores na porta
         self.victory_timer_threshold = 1.5  # 1.5 segundos para vitória
         self.victory_achieved = False  # Flag de vitória
-        
+
         # Lista para plataformas criadas dinamicamente (caixas que caíram na lava)
         self.dynamic_platforms = []
-        
+
         # Carrega sons
         self._load_door_sound()
 
@@ -104,7 +104,7 @@ class GameWorld:
 
         # Combina plataformas estáticas com as dinâmicas
         all_platforms = self.platforms + self.dynamic_platforms
-        
+
         self.collider.resolve_collision(self.player1, all_platforms)
         self.collider.resolve_collision(self.player2, all_platforms)
 
@@ -112,14 +112,14 @@ class GameWorld:
             self.player1, self.collectibles)
         key_collected2 = self.collider.check_collectible_collision(
             self.player2, self.collectibles)
-        
+
         # Atualiza o estado da chave se algum jogador coletou
         if key_collected1 or key_collected2:
             self.has_key = True
 
         self.collider.check_puzzle_collision(self.player1, self.puzzles)
         self.collider.check_puzzle_collision(self.player2, self.puzzles)
-        
+
         # Física dos puzzles
         self.collider.resolve_puzzle_physics(self.puzzles, self.platforms)
         self.collider.resolve_collision_between_puzzles(self.puzzles)
@@ -134,7 +134,7 @@ class GameWorld:
         self.game_over = game_over1 or game_over2
 
         self.collider.resolve_puzzle_physics(self.puzzles, all_platforms)
-        
+
         # Verifica se alguma caixa (puzzle) caiu na lava
         self._check_puzzle_lava_collision()
 
@@ -145,20 +145,22 @@ class GameWorld:
             door_touched = False
             for door in self.doors:
                 # Verifica colisão do player1 com qualquer parte da porta
-                colliding1, _ = self.collider.check_collider(door, self.player1)
+                colliding1, _ = self.collider.check_collider(
+                    door, self.player1)
                 # Verifica colisão do player2 com qualquer parte da porta
-                colliding2, _ = self.collider.check_collider(door, self.player2)
-                
+                colliding2, _ = self.collider.check_collider(
+                    door, self.player2)
+
                 if (colliding1 or colliding2) and not door.get_is_open():
                     door_touched = True
                     break
-            
+
             # Se alguma parte da porta foi tocada, inicia o processo de abertura
             if door_touched:
                 # Toca o som
                 if self.door_sound:
                     self.door_sound.play()
-                
+
                 # Inicia o timer de abertura
                 self.door_opening = True
                 self.door_open_timer = 0.0
@@ -167,7 +169,7 @@ class GameWorld:
     def _check_puzzle_lava_collision(self):
         """Verifica se alguma caixa caiu na lava e a converte em plataforma"""
         puzzles_to_remove = []
-        
+
         for puzzle in self.puzzles:
             for lava in self.lavas:
                 # Verifica se a caixa está colidindo com a lava
@@ -176,33 +178,35 @@ class GameWorld:
                     # Usa a posição da lava para alinhar perfeitamente a plataforma
                     lava_pos = lava.get_position()
                     lava_size = lava.get_size()
-                    
+
                     # Cria uma versão queimada da imagem da caixa
                     if hasattr(puzzle, 'm_image') and puzzle.m_image is not None:
                         # Cria uma cópia da imagem da caixa
                         burned_image = puzzle.m_image.copy()
-                        
+
                         # Cria uma superfície escura para simular queimadura
                         dark_overlay = pygame.Surface((TILE_SIZE, TILE_SIZE))
                         dark_overlay.set_alpha(100)  # Semi-transparente
                         dark_overlay.fill((0, 0, 0))  # Preto
-                        
+
                         # Aplica o overlay escuro por cima da imagem original
                         burned_image.blit(dark_overlay, (0, 0))
                         platform_img = burned_image
                     else:
                         # Fallback para sprite de terra se não tiver imagem
-                        platform_sprite = self.get_sprite(self.tileset, 1, 8, 16)
-                        platform_img = pygame.transform.scale(platform_sprite, (TILE_SIZE, TILE_SIZE))
-                    
+                        platform_sprite = self.get_sprite(
+                            self.tileset, 1, 8, 16)
+                        platform_img = pygame.transform.scale(
+                            platform_sprite, (TILE_SIZE, TILE_SIZE))
+
                     # Cria a nova plataforma na posição da lava para perfeito alinhamento
                     new_platform = Platform(lava_pos, lava_size, platform_img)
                     self.dynamic_platforms.append(new_platform)
-                    
+
                     # Remove a caixa da lista de puzzles
                     puzzles_to_remove.append(puzzle)
                     break  # Sai do loop da lava para este puzzle
-        
+
         # Remove as caixas que caíram na lava
         for puzzle in puzzles_to_remove:
             if puzzle in self.puzzles:
@@ -212,33 +216,35 @@ class GameWorld:
         """Verifica se ambos jogadores estão na porta aberta por 1.5s"""
         # Primeiro verifica se pelo menos uma porta está aberta
         any_door_open = any(door.get_is_open() for door in self.doors)
-        
+
         if not any_door_open:
             self.both_players_at_door_timer = 0.0
             return
-        
+
         # Verifica se ambos jogadores estão tocando em qualquer porta aberta
         player1_at_door = False
         player2_at_door = False
-        
+
         for door in self.doors:
             if door.get_is_open():
-                colliding1, _ = self.collider.check_collider(door, self.player1)
-                colliding2, _ = self.collider.check_collider(door, self.player2)
-                
+                colliding1, _ = self.collider.check_collider(
+                    door, self.player1)
+                colliding2, _ = self.collider.check_collider(
+                    door, self.player2)
+
                 if colliding1:
                     player1_at_door = True
                 if colliding2:
                     player2_at_door = True
-        
+
         # Verifica se ambos jogadores estão no chão (não pulando)
         player1_on_ground = self.player1.m_is_on_ground
         player2_on_ground = self.player2.m_is_on_ground
-        
+
         # Se ambos estão na porta e no chão, incrementa o timer
         if player1_at_door and player2_at_door and player1_on_ground and player2_on_ground:
             self.both_players_at_door_timer += delta_time
-            
+
             if self.both_players_at_door_timer >= self.victory_timer_threshold:
                 self.victory_achieved = True
                 print("Vitoria! !")
@@ -253,7 +259,7 @@ class GameWorld:
         self.door_open_timer = 0.0
         self.both_players_at_door_timer = 0.0
         self.victory_achieved = False
-        
+
         # Fecha todas as portas
         for door in self.doors:
             door.close_door()
@@ -264,12 +270,12 @@ class GameWorld:
 
         for puzzle in self.puzzles:
             puzzle.update(delta_time)
-            
+
         # Update lava animations
         delta_time_ms = delta_time * 1000  # Convert seconds to milliseconds
         for lava in self.lavas:
             lava.update(delta_time_ms)
-        
+
         # Atualiza timer de abertura da porta
         if self.door_opening:
             self.door_open_timer += delta_time
@@ -280,7 +286,7 @@ class GameWorld:
                         door.open_door()
                 self.door_opening = False
                 self.door_open_timer = 0.0
-        
+
         # Verifica se ambos jogadores estão na porta (quando ela estiver aberta)
         if self.has_key and not self.victory_achieved:
             self._check_victory_condition(delta_time)
@@ -295,7 +301,7 @@ class GameWorld:
         self.draw_score()
         self.player1.render(self.screen)
         self.player2.render(self.screen)
-        
+
         # Desenha popup de vitória se necessário
         if self.victory_achieved:
             self._draw_victory()
@@ -329,15 +335,16 @@ class GameWorld:
         score2_text = self.font.render(
             f"Pastor (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
         self.screen.blit(score2_text, (10, 50))
-        
+
         # Desenha indicador de chave
         if self.has_key:
             key_text = self.font.render("CHAVE COLETADA!", True, (255, 255, 0))
             self.screen.blit(key_text, (10, 90))
-        
+
         # Desenha barra de progresso para vitória
         if self.both_players_at_door_timer > 0 and not self.victory_achieved:
-            progress = min(self.both_players_at_door_timer / self.victory_timer_threshold, 1.0)
+            progress = min(self.both_players_at_door_timer /
+                           self.victory_timer_threshold, 1.0)
             self._draw_victory_progress(progress)
 
     def _draw_victory_progress(self, progress):
@@ -347,23 +354,23 @@ class GameWorld:
             "Ambos na porta! Aguarde...", True, (255, 255, 0))
         text_rect = progress_text.get_rect(center=(SCREEN_WIDTH // 2, 150))
         self.screen.blit(progress_text, text_rect)
-        
+
         # Barra de progresso
         bar_width = 300
         bar_height = 20
         bar_x = (SCREEN_WIDTH - bar_width) // 2
         bar_y = 170
-        
+
         # Fundo da barra
         background_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
         pygame.draw.rect(self.screen, (100, 100, 100), background_rect)
-        
+
         # Progresso da barra
         progress_width = int(bar_width * progress)
         progress_rect = pygame.Rect(bar_x, bar_y, progress_width, bar_height)
         color = (255, 255 - int(progress * 255), 0)  # Amarelo para verde
         pygame.draw.rect(self.screen, color, progress_rect)
-        
+
         # Borda da barra
         pygame.draw.rect(self.screen, (255, 255, 255), background_rect, 2)
 
@@ -413,8 +420,8 @@ class GameWorld:
         overlay.fill((0, 50, 0))  # Verde escuro para vitória
         self.screen.blit(overlay, (0, 0))
 
-        # Texto principal "VITÓRIA!"
-        title_text = self.title_font.render("VITÓRIA!", True, (50, 255, 50))
+        # Texto principal "!"
+        title_text = self.title_font.render("VITORIA!", True, (50, 255, 50))
         title_rect = title_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
         self.screen.blit(title_text, title_rect)
@@ -493,40 +500,44 @@ class GameWorld:
                         position, size, CollectibleType.BLACK_SHEEP, points=10)
                     collectibles.append(collectible)
                 elif tile == "K":
-                    position = pygame.math.Vector2(x * TILE_SIZE + 4, y * TILE_SIZE + 4)
+                    position = pygame.math.Vector2(
+                        x * TILE_SIZE + 4, y * TILE_SIZE + 4)
                     size = pygame.math.Vector2(28, 28)
-                    collectible = Collectible(position, size, CollectibleType.KEY, points=0)
+                    collectible = Collectible(
+                        position, size, CollectibleType.KEY, points=0)
                     collectibles.append(collectible)
         return collectibles
 
     def _load_lava(self):
         lavas = []
-        
+
         # Try to load animated gif first
         try:
             lava_gif_path = os.path.join("resources", "graphics", "lava.gif")
-            lava_animated_gif = AnimatedGif(lava_gif_path, scale_size=(TILE_SIZE, TILE_SIZE))
+            lava_animated_gif = AnimatedGif(
+                lava_gif_path, scale_size=(TILE_SIZE, TILE_SIZE))
         except:
             lava_animated_gif = None
-            
+
         # Fallback to tileset sprite
         pixel = self.get_sprite(self.tileset, 1, 46, 8)
-        
+
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == "8":
                     position = pygame.math.Vector2(
                         x * TILE_SIZE, y * TILE_SIZE)
                     size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
-                    
+
                     if lava_animated_gif:
                         # Create lava with animated gif
                         lava = Lava(position, size, None, lava_animated_gif)
                     else:
                         # Fallback to static image
-                        img = pygame.transform.scale(pixel, (TILE_SIZE, TILE_SIZE))
+                        img = pygame.transform.scale(
+                            pixel, (TILE_SIZE, TILE_SIZE))
                         lava = Lava(position, size, img, None)
-                    
+
                     lavas.append(lava)
         return lavas
 
@@ -545,7 +556,6 @@ class GameWorld:
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
                 if tile == "B":
-                    img = pygame.transform.scale(pixel, (TILE_SIZE, TILE_SIZE))
                     position = pygame.math.Vector2(
                         x * TILE_SIZE, y * TILE_SIZE)
                     size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
