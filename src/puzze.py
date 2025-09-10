@@ -10,17 +10,23 @@ class PuzzleType:
     PRESSURE_PLATE = "pressure_plate"
 
 class Puzze(ObjectDynamic):
-    def __init__(self, position, size, velocity, puzzle_type=PuzzleType.MOVABLE_BLOCK, image=None):
+    def __init__(self, position, size, velocity, puzzle_type=PuzzleType.MOVABLE_BLOCK, custom_image=None):
         super().__init__(position, size, velocity)
         self.m_puzzle_type = puzzle_type
         self.m_is_activated = False
         self.m_can_be_pushed = puzzle_type == PuzzleType.MOVABLE_BLOCK
         self.m_is_being_pushed = False
         self.m_push_resistance = 0.8
-        self.m_image = image
+        self.m_image = None
+        self.m_custom_image = custom_image
         self._load_image()
 
     def _load_image(self):
+        # Se uma imagem customizada foi fornecida, use-a
+        if self.m_custom_image is not None:
+            self.m_image = self.m_custom_image
+            return
+            
         try:
             base_path = os.path.dirname(__file__)
             
@@ -47,7 +53,7 @@ class Puzze(ObjectDynamic):
                 self.m_image.fill(color)
             elif self.m_puzzle_type == PuzzleType.DOOR:
                 color = (100, 100, 100) if not self.m_is_activated else (200, 200, 200)
-                self.m_image.fill(color)
+                #self.m_image.fill(color)
             elif self.m_puzzle_type == PuzzleType.PRESSURE_PLATE:
                 color = (255, 255, 0) if self.m_is_activated else (150, 150, 0)
                 self.m_image.fill(color)

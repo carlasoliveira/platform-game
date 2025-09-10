@@ -71,14 +71,20 @@ class Collider:
                 dynamic_object.set_position(dyn_pos)
 
     def check_collectible_collision(self, player, collectibles):
+        key_collected = False
         for collectible in collectibles:
             if not collectible.is_collected():
                 colliding, _ = self.check_collider(collectible, player)
-                if colliding and player.can_collect(collectible):
+                if colliding and collectible.get_type() == "key":
                     points = collectible.collect()
                     player.collect_points(points)
-                    print(
-                        f"Pastor {player.get_player_type()} coletou {collectible.get_type()}! +{points} pontos")
+                    key_collected = True
+                    print(f"Pastor {player.get_player_type()} coletou a chave!")
+                elif colliding and player.can_collect(collectible):
+                    points = collectible.collect()
+                    player.collect_points(points)
+                    print(f"Pastor {player.get_player_type()} coletou {collectible.get_type()}! +{points} pontos")
+        return key_collected
 
     def check_puzzle_collision(self, player, puzzles):
         for puzzle in puzzles:

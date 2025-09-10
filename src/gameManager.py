@@ -22,6 +22,8 @@ class GameManager:
             self._draw()
             if self.world.game_over:
                 self.world._draw_game_over()
+            elif self.world.victory_achieved:
+                self.world._draw_victory()
             else:
                 self.world.keyboard_events()
                 self.world.update(delta_time)
@@ -37,10 +39,14 @@ class GameManager:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-                elif event.key == pygame.K_r and self.world.game_over:
+                elif event.key == pygame.K_r and (self.world.game_over or self.world.victory_achieved):
                     self._restart_game()
     def _restart_game(self):
+        # Reseta o estado antes de criar um novo mundo
+        if hasattr(self.world, 'reset_game_state'):
+            self.world.reset_game_state()
         self.world = GameWorld(self.screen)
+        self.world._load_background_music()
 
     def _draw(self):
         self.world.draw()
