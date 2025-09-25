@@ -17,6 +17,7 @@ class GameWorld:
         self.screen = screen
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
+        '''
         self.map = [
             "2..................................40000",
             "2.................................470000",
@@ -27,7 +28,7 @@ class GameWorld:
             "2...........FG...................XZ.)..1",
             "2........d.wDE../...$..a./.....B.....K.1",
             "2s...W33333333333333333333335.b........1",
-            "65....XYYYY00000000000000000633335843337",
+            "65....XYYYY00000000000000000633335L43337",
             "02.........XYYYYYYYYYYYYYY00000000000000",
             "02e.......................XY000000YYYY00",
             "065.........................1000YZ....X0",
@@ -41,7 +42,35 @@ class GameWorld:
             "2as.........*......................f...1",
             "635.............f...ab.........a..433337",
             "002d........w..43333335..bse.43333700000",
-            "0063588888843337000000633333370000000000",
+            "00635LLLLLL43337000000633333370000000000",
+        ]
+        '''
+
+        self.map = [
+            "0000000000000000000000000000000000000000",
+            "0d777777777777777777777777777777777777c0",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "0b222223.......122222223....1223......40",
+            "0d777778.......677777778....6778......40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "05....................................40",
+            "0b222222222222222222222222222222222222a0",
+            "0000000000000000000000000000000000000000",
         ]
 
         self.background = self._load_background()
@@ -76,7 +105,7 @@ class GameWorld:
         self._load_door_sound()
 
         self.player1 = Player(
-            position=pygame.math.Vector2(568, 620),
+            position=pygame.math.Vector2(120, 420),
             sprites=self.player_sprites2,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
@@ -85,7 +114,7 @@ class GameWorld:
         )
 
         self.player2 = Player(
-            position=pygame.math.Vector2(650, 620),
+            position=pygame.math.Vector2(180, 420),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
@@ -462,8 +491,15 @@ class GameWorld:
 
     def _load_background(self):
         base_path = os.path.dirname(__file__)
-        bg_path = os.path.join(base_path, '..', 'resources',
-                               'graphics', 'background.png')
+        
+        level = 2  # Define o nível atual (2)
+
+        if(level == 1):
+            bg_path = os.path.join(base_path, '..', 'resources',
+                                'graphics', 'background.png')
+        if(level == 2):
+            bg_path = os.path.join(base_path, '..', 'resources',
+                                'graphics', 'background2.png')
         bg = pygame.image.load(bg_path)
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -524,7 +560,7 @@ class GameWorld:
 
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
-                if tile == "8":
+                if tile == "L":
                     position = pygame.math.Vector2(
                         x * TILE_SIZE, y * TILE_SIZE)
                     size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
@@ -568,27 +604,51 @@ class GameWorld:
     def _load_platforms(self):
         platforms = []
 
-        plataform_tile_map = {
-            "0": self.get_sprite(self.tileset, 1, 8, 16), # tile_DIRT
-            "1": self.get_sprite(self.tileset, 0, 8, 16), # tile_DIRT_EDGE_LEFT
-            "2": self.get_sprite(self.tileset, 2, 8, 16), # tile_DIRT_EDGE_RIGHT
+        level = 2  # Define o nível atual (2)
 
-            "3": self.get_sprite(self.tileset, 1, 7, 16), # tile_GRASS
-            "4": self.get_sprite(self.tileset, 0, 7, 16), # tile_GRASS_EDGE_LEFT
-            "5": self.get_sprite(self.tileset, 2, 7, 16), # tile_GRASS_EDGE_RIGHT
+        if(level == 1):
+            plataform_tile_map = {
+                "0": self.get_sprite(self.tileset, 1, 8, 16), # tile_DIRT
+                "1": self.get_sprite(self.tileset, 0, 8, 16), # tile_DIRT_EDGE_LEFT
+                "2": self.get_sprite(self.tileset, 2, 8, 16), # tile_DIRT_EDGE_RIGHT
 
-            "W": self.get_sprite(self.tileset, 0, 10, 16), # tile_ONLY_GRASS_LEFT
-            "U": self.get_sprite(self.tileset, 2, 10, 16), # tile_ONLY_GRASS_RIGHT
-            "V": self.get_sprite(self.tileset, 1, 10, 16), # tile_ONLY_GRASS_CENTER
+                "3": self.get_sprite(self.tileset, 1, 7, 16), # tile_GRASS
+                "4": self.get_sprite(self.tileset, 0, 7, 16), # tile_GRASS_EDGE_LEFT
+                "5": self.get_sprite(self.tileset, 2, 7, 16), # tile_GRASS_EDGE_RIGHT
 
-            
-            "6": self.get_sprite(self.tileset, 4, 8, 16), # tile_GRASS_EDGE_TOP_RIGHT
-            "7": self.get_sprite(self.tileset, 5, 8, 16), # tile_GRASS_EDGE_TOP_LEFT
+                "W": self.get_sprite(self.tileset, 0, 10, 16), # tile_ONLY_GRASS_LEFT
+                "U": self.get_sprite(self.tileset, 2, 10, 16), # tile_ONLY_GRASS_RIGHT
+                "V": self.get_sprite(self.tileset, 1, 10, 16), # tile_ONLY_GRASS_CENTER
 
-            "X": self.get_sprite(self.tileset, 0, 9, 16), # tile_DIRT_BOTTOM_LEFT
-            "Y": self.get_sprite(self.tileset, 1, 9, 16), # tile_DIRT_BOTTOM
-            "Z": self.get_sprite(self.tileset, 2, 9, 16), # tile_DIRT_BOTTOM_right
-        }
+                
+                "6": self.get_sprite(self.tileset, 4, 8, 16), # tile_GRASS_EDGE_TOP_RIGHT
+                "7": self.get_sprite(self.tileset, 5, 8, 16), # tile_GRASS_EDGE_TOP_LEFT
+
+                "X": self.get_sprite(self.tileset, 0, 9, 16), # tile_DIRT_BOTTOM_LEFT
+                "Y": self.get_sprite(self.tileset, 1, 9, 16), # tile_DIRT_BOTTOM
+                "Z": self.get_sprite(self.tileset, 2, 9, 16), # tile_DIRT_BOTTOM_right
+            }
+
+        if(level == 2):
+            plataform_tile_map = {
+                "0": self.get_sprite(self.tileset, 1, 40, 16), # tile_DIRT
+
+                "1": self.get_sprite(self.tileset, 0, 39, 16), # tile_GROUND_TOP_LEFT
+                "2": self.get_sprite(self.tileset, 1, 39, 16), # tile_GROUND_TOP_CENTER
+                "3": self.get_sprite(self.tileset, 2, 39, 16), # tile_GROUND_TOP_RIGHT
+
+                "4": self.get_sprite(self.tileset, 0, 40, 16), # tile_GROUND_MID_LEFT
+                "5": self.get_sprite(self.tileset, 2, 40, 16), # tile_GROUND_MID_RIGHT
+
+                "6": self.get_sprite(self.tileset, 0, 41, 16), # tile_GROUND_BOT_LEFT
+                "7": self.get_sprite(self.tileset, 1, 41, 16), # tile_GROUND_BOT_CENTER
+                "8": self.get_sprite(self.tileset, 2, 41, 16), # tile_GROUND_BOT_RIGHT
+
+                "a": self.get_sprite(self.tileset, 21, 40, 16), # tile_GROUND_CORNER_TOP_LEFT
+                "b": self.get_sprite(self.tileset, 20, 40, 16), # tile_GROUND_CORNER_TOP_RIGHT
+                "c": self.get_sprite(self.tileset, 21, 39, 16), # tile_GROUND_CORNER_BOT_LEFT
+                "d": self.get_sprite(self.tileset, 20, 39, 16), # tile_GROUND_CORNER_BOT_RIGHT
+            }
 
         for y, row in enumerate(self.map):
             for x, tile_char in enumerate(row):
@@ -605,63 +665,66 @@ class GameWorld:
     def _load_decorations(self):
         decorations = []
 
-        decoration_tile_map = {
-            "a": self.get_sprite(self.tileset, 9, 10, 16),  # tile_WEEDS_1
-            "b": self.get_sprite(self.tileset, 10, 10, 16),  # tile_WEEDS_2
-            "c": self.get_sprite(self.tileset, 11, 10, 16),  # tile_WEEDS_3
+        level = 2  # Define o nível atual (2)
 
-            "d": self.get_sprite(self.tileset, 11, 12, 16),  # tile_FLOWERS_1
-            "e": self.get_sprite(self.tileset, 11, 13, 16),  # tile_FLOWERS_2
-            
-            "$": self.get_sprite(self.tileset, 9, 14, 16),
+        if(level == 1):       
+            decoration_tile_map = {
+                "a": self.get_sprite(self.tileset, 9, 10, 16),  # tile_WEEDS_1
+                "b": self.get_sprite(self.tileset, 10, 10, 16),  # tile_WEEDS_2
+                "c": self.get_sprite(self.tileset, 11, 10, 16),  # tile_WEEDS_3
 
-            "(": self.get_sprite(self.tileset, 16, 10, 16),  # tile_BLOCK_LAMP_1
-            ")": self.get_sprite(self.tileset, 17, 12, 16),  # tile_BLOCK_LAMP_2
+                "d": self.get_sprite(self.tileset, 11, 12, 16),  # tile_FLOWERS_1
+                "e": self.get_sprite(self.tileset, 11, 13, 16),  # tile_FLOWERS_2
+                
+                "$": self.get_sprite(self.tileset, 9, 14, 16),
 
-            "f": self._make_decoration_block_auto((9, 11), 3, 1),
-            "/": self._make_decoration_block_auto((21, 31), 3, 1),
+                "(": self.get_sprite(self.tileset, 16, 10, 16),  # tile_BLOCK_LAMP_1
+                ")": self.get_sprite(self.tileset, 17, 12, 16),  # tile_BLOCK_LAMP_2
 
-            "@": self._make_decoration_block_auto((10, 35), 8, 4), # tile_block_WALLS
-            "#": self._make_decoration_block_auto((0, 31), 10, 2), # tile_block_ROOF
-            "!": self._make_decoration_block_auto((17, 23), 4, 4), # tile_block_POÇO
+                "f": self._make_decoration_block_auto((9, 11), 3, 1),
+                "/": self._make_decoration_block_auto((21, 31), 3, 1),
 
-            "%": self._make_decoration_block_auto((44, 29), 3, 4), # tile_block_TREE-1
-            "*": self._make_decoration_block_auto((43, 33), 3, 3), # tile_block_LOG
-        }
+                "@": self._make_decoration_block_auto((10, 35), 8, 4), # tile_block_WALLS
+                "#": self._make_decoration_block_auto((0, 31), 10, 2), # tile_block_ROOF
+                "!": self._make_decoration_block_auto((17, 23), 4, 4), # tile_block_POÇO
 
-        for y, row in enumerate(self.map):
-            for x, tile_char in enumerate(row):
-                if tile_char in decoration_tile_map:
-                    block_surface = decoration_tile_map[tile_char]
+                "%": self._make_decoration_block_auto((44, 29), 3, 4), # tile_block_TREE-1
+                "*": self._make_decoration_block_auto((43, 33), 3, 3), # tile_block_LOG
+            }
 
-                    # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
-                    if tile_char == "@":
-                        img = pygame.transform.scale(block_surface, (8 * TILE_SIZE, 4 * TILE_SIZE))
-                        size = pygame.math.Vector2(8 * TILE_SIZE, 4 * TILE_SIZE)
-                    elif tile_char == "#":
-                        img = pygame.transform.scale(block_surface, (10 * TILE_SIZE, 2 * TILE_SIZE))
-                        size = pygame.math.Vector2(10 * TILE_SIZE, 2 * TILE_SIZE)
-                    elif tile_char == "f":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
-                    elif tile_char == "/":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
-                    elif tile_char == "%":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 4 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 4 * TILE_SIZE)
-                    elif tile_char == "*":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 3 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 3 * TILE_SIZE)
-                    elif tile_char == "!":
-                        img = pygame.transform.scale(block_surface, (4 * TILE_SIZE, 4 * TILE_SIZE))
-                        size = pygame.math.Vector2(4 * TILE_SIZE, 4 * TILE_SIZE)
-                    else:
-                        img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
-                        size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+            for y, row in enumerate(self.map):
+                for x, tile_char in enumerate(row):
+                    if tile_char in decoration_tile_map:
+                        block_surface = decoration_tile_map[tile_char]
 
-                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
-                    decorations.append(Decoration(position, size, img))
+                        # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
+                        if tile_char == "@":
+                            img = pygame.transform.scale(block_surface, (8 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(8 * TILE_SIZE, 4 * TILE_SIZE)
+                        elif tile_char == "#":
+                            img = pygame.transform.scale(block_surface, (10 * TILE_SIZE, 2 * TILE_SIZE))
+                            size = pygame.math.Vector2(10 * TILE_SIZE, 2 * TILE_SIZE)
+                        elif tile_char == "f":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                        elif tile_char == "/":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                        elif tile_char == "%":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 4 * TILE_SIZE)
+                        elif tile_char == "*":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 3 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 3 * TILE_SIZE)
+                        elif tile_char == "!":
+                            img = pygame.transform.scale(block_surface, (4 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(4 * TILE_SIZE, 4 * TILE_SIZE)
+                        else:
+                            img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
+                            size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+
+                        position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                        decorations.append(Decoration(position, size, img))
 
         return decorations
 
