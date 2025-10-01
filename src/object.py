@@ -18,7 +18,6 @@ class Object(ABC):
     def render(self, surface):
         pass
 
-
 class ObjectDynamic(Object):
     def __init__(self, position, size, velocity):
         super().__init__(position, size)
@@ -33,7 +32,6 @@ class ObjectDynamic(Object):
     @abstractmethod
     def update(self, delta_time, game_map):
         pass
-
 
 class ObjectStatic(Object):
     def __init__(self, position, size):
