@@ -807,3 +807,12 @@ class GameWorld:
             'run_right': fake_gif,
             'run_left': fake_gif
         }
+        
+    def write_score(self):
+        base_path = os.path.dirname(__file__) # Path do arquivo atual
+        score_file_path = os.path.join(base_path, '..', 'resources', 'score', 'scores.txt') # Path relativo ao arquivo de pontuação
+        try:
+            with open(score_file_path, 'a') as file: # Modo 'a' para anexar ao arquivo
+                file.write(f"Player 1: {self.player1.get_score()} | Player 2: {self.player2.get_score()}\n")
+        except Exception as e:
+            print(f"Erro ao escrever o arquivo de pontuação: {e}")

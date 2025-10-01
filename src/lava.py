@@ -1,5 +1,5 @@
 import pygame
-from object import ObjectStatic
+from Object import ObjectStatic
 from animated_gif import AnimatedGif
 
 class Lava(ObjectStatic):

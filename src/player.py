@@ -1,4 +1,4 @@
-from object import ObjectDynamic
+from Object import ObjectDynamic
 from collider import Collider
 from constants import gravity
 

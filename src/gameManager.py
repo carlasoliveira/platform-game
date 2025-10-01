@@ -14,6 +14,8 @@ class GameManager:
         self.running = True
         self.last_time = pygame.time.get_ticks()
         self.world._load_background_music()
+        
+        self.score_written = False
 
     def run(self):
         while self.running:
@@ -28,9 +30,14 @@ class GameManager:
                 self.world.keyboard_events()
                 self.world.update(delta_time)
                 self.world.resolve_collisions()
-            
+           
+            if (self.world.game_over or self.world.victory_achieved) and not self.score_written:
+                self.world.write_score()
+                self.score_written = True 
+
             pygame.display.update()
             self.world.clock.tick(60)
+            
 
     def _handle_events(self):
         for event in pygame.event.get():
