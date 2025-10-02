@@ -17,7 +17,6 @@ class Collider:
         target_distance = (static_object.get_size() +
                            dynamic_object.get_size()) / 2.0
 
-        # static_rect = pg.Rect(
         #     static_pos.x - static_object.get_size().x / 2,
         #     static_pos.y - static_object.get_size().y / 2,
         #     static_object.get_size().x,
@@ -122,7 +121,6 @@ class Collider:
             push_velocity = pg.math.Vector2(push_direction * push_force, 0)
             block.push(push_velocity)
 
-            # Pequeno empurrão para o jogador também
             player_pos.x += ds.x * 1
 
         player.set_position(player_pos)
@@ -164,7 +162,6 @@ class Collider:
         return False
 
     def resolve_collision_between_puzzles(self, puzzles):
-        """Resolve colisões entre puzzles"""
         for i in range(len(puzzles)):
             for j in range(i + 1, len(puzzles)):
                 puzzle_a = puzzles[i]
@@ -177,21 +174,17 @@ class Collider:
 
                     if colliding:
                         if abs_ds_y <= abs_ds_x:
-                            # Colisão vertical
                             if ds.y < 0:
                                 puzzle_a_pos = puzzle_a.get_position()
-                                # puzzle_a_pos.y += (ds.y / 2.0)
                                 puzzle_a.set_position(puzzle_a_pos)
                                 puzzle_a.set_velocity(pg.math.Vector2(
                                     puzzle_a.get_velocity().x, 0))
                             else:
                                 puzzle_b_pos = puzzle_b.get_position()
-                                # puzzle_b_pos.y += (ds.y / 2.0)
                                 puzzle_b.set_position(puzzle_b_pos)
                                 puzzle_b.set_velocity(pg.math.Vector2(
                                     puzzle_b.get_velocity().x, 0))
                         else:
-                            # Colisão horizontal
                             if ds.x < 0:
                                 puzzle_a_pos = puzzle_a.get_position()
                                 puzzle_a_pos.x += ds.x

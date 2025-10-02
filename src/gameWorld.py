@@ -167,7 +167,6 @@ class GameWorld:
                 print("Porta sendo aberta com a chave...")
 
     def _check_puzzle_lava_collision(self):
-        """Verifica se alguma caixa caiu na lava e a converte em plataforma"""
         puzzles_to_remove = []
 
         for puzzle in self.puzzles:
@@ -221,7 +220,6 @@ class GameWorld:
             self.both_players_at_door_timer = 0.0
             return
 
-        # Verifica se ambos jogadores estão tocando em qualquer porta aberta
         player1_at_door = False
         player2_at_door = False
 
@@ -237,11 +235,9 @@ class GameWorld:
                 if colliding2:
                     player2_at_door = True
 
-        # Verifica se ambos jogadores estão no chão (não pulando)
         player1_on_ground = self.player1.m_is_on_ground
         player2_on_ground = self.player2.m_is_on_ground
-
-        # Se ambos estão na porta e no chão, incrementa o timer
+        
         if player1_at_door and player2_at_door and player1_on_ground and player2_on_ground:
             self.both_players_at_door_timer += delta_time
 
@@ -249,18 +245,15 @@ class GameWorld:
                 self.victory_achieved = True
                 print("Vitoria! !")
         else:
-            # Reset o timer se a condição não for atendida
             self.both_players_at_door_timer = 0.0
 
     def reset_game_state(self):
-        """Reseta o estado do jogo, incluindo chave e portas"""
         self.has_key = False
         self.door_opening = False
         self.door_open_timer = 0.0
         self.both_players_at_door_timer = 0.0
         self.victory_achieved = False
 
-        # Fecha todas as portas
         for door in self.doors:
             door.close_door()
 
@@ -271,7 +264,6 @@ class GameWorld:
         for puzzle in self.puzzles:
             puzzle.update(delta_time)
 
-        # Update lava animations
         delta_time_ms = delta_time * 1000  # Convert seconds to milliseconds
         for lava in self.lavas:
             lava.update(delta_time_ms)

@@ -10,7 +10,7 @@ class Decoration(ObjectStatic):
         pos = self.get_position()
 
         if self.image:
-            screen.blit(self.image, (int(pos.x), int(pos.y)))  # desenha a imagem
+            screen.blit(self.image, (int(pos.x), int(pos.y)))
         else:
             size = self.get_size()
             center = pos + (size / 2.0)
@@ -20,7 +20,7 @@ class Decoration(ObjectStatic):
                 int(size.x),
                 int(size.y)
             )
-            pygame.draw.rect(screen, (30, 30, 30), rect)  # fallback se não tiver imagem
+            pygame.draw.rect(screen, (30, 30, 30), rect)
 
     def __del__(self):
         pass
