@@ -19,7 +19,7 @@ class Menu:
 
     def draw(self, screen):
         print('Desenhou o menu')
-        
+
         overlay = pygame.Surface((450, 300))
         overlay.set_alpha(180)
         overlay.fill((0, 0, 0))
@@ -50,7 +50,7 @@ class Menu:
             if event.type == pygame.MOUSEMOTION:
                 self.start_button_hovered = self.start_button.collidepoint(
                     event.pos)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: 
                 if self.start_button.collidepoint(event.pos):
                     return True
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:

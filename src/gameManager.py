@@ -20,27 +20,42 @@ class GameManager:
 
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Platform Game")
-        self.start_game = False
+
+        self.clock = pygame.time.Clock() 
         self.running = True
         self.state = StateMachine.MENU
         self.last_time = pygame.time.get_ticks()
+        
+        # Instanciação do Menu APENAS uma vez
+        self.menu = Menu()
+        
+        # Inicialização do mundo do jogo (será criado mais tarde, quando for INICIO)
+        self.world = None 
+        self.world_initialized = False # Para saber se o GameWorld já foi criado
 
     def run(self):
         while self.running:
-            # self._handle_events()
+            self._handle_events() 
+            
+            delta_time = self._calculate_delta_time()
 
             if self.state == StateMachine.MENU:
                 print('No estado menu')
-                self.menu = Menu()
-                self.menu.draw(self.screen)
                 
-                if self.menu.handle_event():
+                if self.menu.handle_event(): 
                     print('Iniciou o jogo')
                     self.state = StateMachine.INICIO
-            if self.state == StateMachine.INICIO:
-                self.world = GameWorld(self.screen)
-                self.world._load_background_music()
-                delta_time = self._calculate_delta_time()
+                    
+                self.menu.draw(self.screen)
+                pygame.display.update()
+                self.clock.tick(60)
+                
+            elif self.state == StateMachine.INICIO:
+                if not self.world_initialized:
+                    self.world = GameWorld(self.screen)
+                    self.world._load_background_music()
+                    self.world_initialized = True
+                    
                 if self.world.game_over:
                     self.world._draw_game_over()
                 elif self.world.victory_achieved:
@@ -50,27 +65,20 @@ class GameManager:
                     self.world.update(delta_time)
                     self.world.resolve_collisions()
                     self.world.draw()
+                
                 pygame.display.update()
-                self.world.clock.tick(60)
+                self.clock.tick(60)
 
 
     def _handle_events(self):
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-                # elif event.key == pygame.K_r and (self.world.game_over or self.world.victory_achieved):
-                #     self._restart_game()
-
-    # def _restart_game(self):
-    #     if hasattr(self.world, 'reset_game_state'):
-    #         self.world.reset_game_state()
-    #     self.world = GameWorld(self.screen)
-    #     self.world._load_background_music()
-
-
+                
     def _calculate_delta_time(self):
         current_time = pygame.time.get_ticks()
         delta_time = (current_time - self.last_time) / 1000.0
