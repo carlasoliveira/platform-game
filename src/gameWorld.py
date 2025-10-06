@@ -49,28 +49,28 @@ class GameWorld:
         self.map = [
             "0000000000000000000000000000000000000000",
             "0d7777777777777777777cd777777777777777c0",
-            "05...................45...............40",
-            "05....@..$..#........68...............40",
-            "05....................................40",
-            "05....................................40",
-            "05..B.................................40",
-            "05....................................40",
+            "05...................45..............B40",
+            "05....@..$..#........68.............K.40",
+            "05.............................-...^..40",
+            "05...............HI.......X...........40",
+            "05..B............FG..............¨s...40",
+            "05...............DE.............|.....40",
             "0b222223.......12222222222222222222222a0",
             "0d777778.......6777cd77777777777777777c0",
             "05.................68.................40",
             "05....................................40",
-            "05..%.................................40",
+            "05..%.........................V.......40",
             "05!...................................40",
             "05....................................40",
             "0b222223........12222223....12223.....40",
-            "0P777778........67777778....67778.....R0",
-            "0S....................................R0",
-            "0S........................-........:..R0",
-            "0S.......A.......................&....R0",
-            "0S.........................../...;....R0",
-            "0S.....*.( *)..............*.)&.).)&.*R0",
-            "0NQQQQQQQQQQQULLLTULLLTQQQQQQQQQQQQQQQM0",
-            "0000000000000NQQQMNQQQM00000000000000000",
+            "0P777778........67777778....67778....BR0",
+            "0S...z.........................z......R0",
+            "0S.................................:..R0",
+            "0S.......A...................s...&....R0",
+            "0Sx........*)..............y*/.B.;....R0",
+            "0NU....*.( TQU...)w*.......TU)&.).)&.*R0",
+            "00NQQQQQQQQM0SLLLTQULLLTQQQ00QQQQQQQQQM0",
+            "0000000000000NQQQM0NQQQM0000000000000000",
         ]
 
         self.background = self._load_background()
@@ -668,6 +668,9 @@ class GameWorld:
                 ":": self._make_decoration_block_auto((21,20), 3, 4), # tile_BLOCK_BOOKSHELF-1
                 ";": self._make_decoration_block_auto((25,20), 2, 2), # tile_BLOCK_BOOKSHELF-2
                 "/": self._make_decoration_block_auto((25,22), 2, 2), # tile_BLOCK_BOOKSHELF-3
+                "^": self._make_decoration_block_auto((24,4), 3, 4), # tile_BLOCK_BOOKSHELF-4
+
+                "|": self._make_decoration_block_auto((31,15), 3, 1), # tile_BLOCK_BED
             }
 
             for y, row in enumerate(self.map):
@@ -676,12 +679,15 @@ class GameWorld:
                         block_surface = plataform_tile_map[tile_char]
 
                         # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
-                        if tile_char == ":":
+                        if tile_char == ":" or tile_char == "^":
                             img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 4 * TILE_SIZE))
                             size = pygame.math.Vector2(3 * TILE_SIZE, 4 * TILE_SIZE)
                         elif tile_char == ";" or tile_char == "/":
                             img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 2 * TILE_SIZE))
                             size = pygame.math.Vector2(2 * TILE_SIZE, 2 * TILE_SIZE)
+                        elif tile_char == "|":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
                         else:
                             img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
                             size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
@@ -766,10 +772,21 @@ class GameWorld:
 
                 "%": self._make_decoration_block_auto((2, 43), 2, 3), # tile_block_DOOR
 
+                "V": self._make_decoration_block_auto((18, 45), 2, 2), # tile_block_WINDOWS-1
+                "W": self._make_decoration_block_auto((20, 45), 2, 2), # tile_block_WINDOWS-2
+                "X": self._make_decoration_block_auto((18, 47), 2, 2), # tile_block_WINDOWS-3
+
+                "¨": self._make_decoration_block_auto((32, 14), 2, 1),  # tile_block_BED-DECORATION
+
+                "z": self._make_decoration_block_auto((16, 10), 1, 2),  # tile_block_LAMP
+
                 ")": self.get_sprite(self.tileset, 14, 24, 16),  # tile_UNDERGROUND_PLANT-0
                 "*": self.get_sprite(self.tileset, 14, 23, 16),  # tile_UNDERGROUND_PLANT-1
                 "&": self.get_sprite(self.tileset, 15, 26, 16),  # tile_UNDERGROUND_PLANT-2
                 "(": self.get_sprite(self.tileset, 16, 23, 16),  # tile_UNDERGROUND_PLANT-3
+
+                "x": self.get_sprite(self.tileset, 21, 24, 16),  # tile_POTION-1
+                "y": self.get_sprite(self.tileset, 22, 24, 16),  # tile_POTION-2
             }
 
             for y, row in enumerate(self.map):
@@ -784,12 +801,15 @@ class GameWorld:
                         elif tile_char == "%":
                             img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 3 * TILE_SIZE))
                             size = pygame.math.Vector2(2 * TILE_SIZE, 3 * TILE_SIZE)
-                        elif tile_char == "!":
+                        elif tile_char == "!" or tile_char == "z":
                             img = pygame.transform.scale(block_surface, (1 * TILE_SIZE, 2 * TILE_SIZE))
                             size = pygame.math.Vector2(1 * TILE_SIZE, 2 * TILE_SIZE)
-                        elif tile_char == "-":
+                        elif tile_char == "-" or tile_char == "V" or tile_char == "W" or tile_char == "X":
                             img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 2 * TILE_SIZE))
                             size = pygame.math.Vector2(2 * TILE_SIZE, 2 * TILE_SIZE)
+                        elif tile_char == "¨":
+                            img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(2 * TILE_SIZE, 1 * TILE_SIZE)
                         else:
                             img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
                             size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
