@@ -6,11 +6,11 @@ class AnimatedGif:
     def __init__(self, gif_path, scale_size=None):
 
         self.m_frames = []
-        self.m_frame_durations = []  # Store duration for each frame
+        self.m_frame_durations = []
         self.m_current_frame = 0
         self.m_frame_count = 0
         self.m_frame_timer = 0
-        self.m_current_frame_duration = 100  # Default duration in milliseconds
+        self.m_current_frame_duration = 100
 
 
         gif = Image.open(gif_path)
@@ -30,9 +30,8 @@ class AnimatedGif:
             frame_data = frame.tobytes()
             pygame_frame = pg.image.frombytes(frame_data, frame.size, 'RGBA')
             
-            # Get frame duration from GIF (in milliseconds)
-            duration = gif.info.get('duration', 100)  # Default to 100ms if not specified
-            
+            duration = gif.info.get('duration', 100)
+
             self.m_frames.append(pygame_frame)
             self.m_frame_durations.append(duration)
             frame_index += 1
@@ -46,7 +45,7 @@ class AnimatedGif:
             return None
         return self.m_frames[self.m_current_frame]
     
-    def update(self, delta_time_ms=16.67):  # Default ~60 FPS
+    def update(self, delta_time_ms=16.67):
         if self.m_frame_count <= 1:
             return
         
@@ -54,7 +53,6 @@ class AnimatedGif:
         if self.m_frame_timer >= self.m_current_frame_duration:
             self.m_frame_timer = 0
             self.m_current_frame = (self.m_current_frame + 1) % self.m_frame_count
-            # Update duration for the new current frame
             self.m_current_frame_duration = self.m_frame_durations[self.m_current_frame]
     
     def reset(self):
@@ -72,7 +70,7 @@ class AnimatedGif:
 
         flipped_gif = AnimatedGif.__new__(AnimatedGif)
         flipped_gif.m_frames = flipped_frames
-        flipped_gif.m_frame_durations = self.m_frame_durations.copy()  # Copy frame durations
+        flipped_gif.m_frame_durations = self.m_frame_durations.copy()
         flipped_gif.m_frame_count = len(flipped_frames)
         flipped_gif.m_current_frame = 0
         flipped_gif.m_frame_timer = 0

@@ -37,8 +37,6 @@ class Player(ObjectDynamic):
         
         pg.mixer.init()
         self._load_sounds()
-    
-    
 
     def render(self, surface):
 
@@ -110,7 +108,7 @@ class Player(ObjectDynamic):
                 
                 if self.m_jump_sound:
                     self.m_jump_sound.play()
-        print('Is on ground:', self.m_is_on_ground)
+        # print('Is on ground:', self.m_is_on_ground)
     
     def _load_sounds(self):
         base_path = os.path.dirname(__file__)
