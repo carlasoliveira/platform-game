@@ -10,6 +10,7 @@ from lava import Lava
 from Platform import Platform
 from player import Player
 from puzze import Puzze, PuzzleType
+from secretArea import SecretArea
 
 
 class GameWorld:
@@ -81,6 +82,7 @@ class GameWorld:
         self.collectibles = self._load_collectibles()
         self.puzzles = self._load_puzzles()
         self.lavas = self._load_lava()
+        self.secret_areas = self._load_secret_areas()  # Carrega áreas secretas
         self.player_sprites = self.load_player_sprites()
         self.player_sprites2 = self.load_player_sprites2()
         self._load_background_music()
@@ -305,6 +307,31 @@ class GameWorld:
         for lava in self.lavas:
             lava.update(delta_time_ms)
 
+        # Atualizar áreas secretas baseado na posição dos players
+        for secret_area in self.secret_areas:
+            # Verificar collision com ambos os players
+            player1_pos = self.player1.get_position()
+            player1_size = self.player1.get_size()
+            player1_rect = pygame.Rect(player1_pos.x, player1_pos.y, 
+                                     player1_size.x, player1_size.y)
+            
+            player2_pos = self.player2.get_position()
+            player2_size = self.player2.get_size()
+            player2_rect = pygame.Rect(player2_pos.x, player2_pos.y,
+                                     player2_size.x, player2_size.y)
+            
+            # Atualizar baseado se qualquer player está na área
+            player1_in_area = secret_area.check_player_collision(player1_rect)
+            player2_in_area = secret_area.check_player_collision(player2_rect)
+            
+            # Se qualquer player estiver na área, ela deve ficar semi-transparente (50%)
+            if player1_in_area or player2_in_area:
+                secret_area.is_visible = True
+                secret_area.alpha = max(100, secret_area.alpha - 15)
+            else:
+                secret_area.is_visible = True
+                secret_area.alpha = min(255, secret_area.alpha + 15)
+
         # Atualiza timer de abertura da porta
         if self.door_opening:
             self.door_open_timer += delta_time
@@ -330,6 +357,10 @@ class GameWorld:
         self.draw_score()
         self.player1.render(self.screen)
         self.player2.render(self.screen)
+        
+        # Renderizar áreas secretas por último (para sobrepor tudo, incluindo players)
+        for secret_area in self.secret_areas:
+            secret_area.render(self.screen)
 
         # Desenha popup de vitória se necessário
         if self.victory_achieved:
@@ -543,6 +574,24 @@ class GameWorld:
                         position, size, CollectibleType.KEY, points=0)
                     collectibles.append(collectible)
         return collectibles
+
+    def _load_secret_areas(self):
+        secret_areas = []
+        
+        level = 2
+        
+        if(level == 1):
+
+            pass
+            
+        if(level == 2):
+            
+            # secret_areas.append(SecretArea(50, 489, 920, 255, '#0F0B0D'))
+
+            secret_areas.append(SecretArea(904, 340, 323, 157, '#0F0B0D'))
+            secret_areas.append(SecretArea(1010, 495, 217, 248, '#0F0B0D')) 
+            
+        return secret_areas
 
     def _load_lava(self):
         lavas = []
@@ -974,3 +1023,77 @@ class GameWorld:
             'run_right': fake_gif,
             'run_left': fake_gif
         }
+
+    # === MÉTODOS DE GERENCIAMENTO DE ÁREAS SECRETAS ===
+    
+    def add_secret_area(self, x, y, width, height, color_hex):
+        """
+        Adiciona uma nova área secreta ao jogo dinamicamente
+        
+        Args:
+            x (int): Posição X do retângulo
+            y (int): Posição Y do retângulo
+            width (int): Largura do retângulo 
+            height (int): Altura do retângulo
+            color_hex (str): Cor em formato hexadecimal (ex: "#FF0000")
+            
+        Returns:
+            SecretArea: A área secreta criada
+        """
+        secret_area = SecretArea(x, y, width, height, color_hex)
+        self.secret_areas.append(secret_area)
+        print(f"Nova área secreta adicionada em ({x}, {y}) com tamanho {width}x{height}")
+        return secret_area
+    
+    def remove_secret_area(self, index):
+        """
+        Remove uma área secreta pelo índice
+        
+        Args:
+            index (int): Índice da área secreta na lista
+            
+        Returns:
+            bool: True se removida com sucesso, False caso contrário
+        """
+        if 0 <= index < len(self.secret_areas):
+            removed_area = self.secret_areas.pop(index)
+            print(f"Área secreta removida: {removed_area.get_info()}")
+            return True
+        return False
+    
+    def remove_secret_area_at_position(self, x, y):
+        """
+        Remove áreas secretas que contenham a posição especificada
+        
+        Args:
+            x (int): Posição X a verificar
+            y (int): Posição Y a verificar
+            
+        Returns:
+            int: Número de áreas removidas
+        """
+        removed_count = 0
+        self.secret_areas = [area for area in self.secret_areas 
+                           if not area.rect.collidepoint(x, y)]
+        
+        if removed_count > 0:
+            print(f"Removidas {removed_count} áreas secretas na posição ({x}, {y})")
+        
+        return removed_count
+    
+    def get_secret_areas_info(self):
+        """
+        Retorna informações de todas as áreas secretas para debug
+        
+        Returns:
+            list: Lista com informações de cada área secreta
+        """
+        return [area.get_info() for area in self.secret_areas]
+    
+    def clear_all_secret_areas(self):
+        """
+        Remove todas as áreas secretas
+        """
+        count = len(self.secret_areas)
+        self.secret_areas.clear()
+        print(f"Todas as {count} áreas secretas foram removidas")
