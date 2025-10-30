@@ -43,6 +43,15 @@ class GameManager:
                 if not self.world_initialized:
                     self.world = GameWorld(self.screen)
                     self.world._load_background_music()
+                    # Pass player names from menu into the world (if provided)
+                    try:
+                        # menu stores names when Start is pressed
+                        if hasattr(self.menu, 'player_name_1') and self.menu.player_name_1.strip() != "":
+                            self.world.player1_name = self.menu.player_name_1
+                        if hasattr(self.menu, 'player_name_2') and self.menu.player_name_2.strip() != "":
+                            self.world.player2_name = self.menu.player_name_2
+                    except Exception:
+                        pass
                     self.world_initialized = True
                     
                 if self.world.game_over:

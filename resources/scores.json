@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2025-10-29 21:46:16",
+    "reason": "GAME OVER",
+    "player1": {
+      "name": "Keren",
+      "score": 10
+    },
+    "player2": {
+      "name": "Apuque",
+      "score": 0
+    }
+  },
+  {
+    "timestamp": "2025-10-29 21:46:58",
+    "reason": "GAME OVER",
+    "player1": {
+      "name": "Carla",
+      "score": 10
+    },
+    "player2": {
+      "name": "Sanches",
+      "score": 0
+    }
+  }
+]
