@@ -9,6 +9,136 @@ class PuzzleType:
     DOOR = "door"
     PRESSURE_PLATE = "pressure_plate"
 
+class PressurePlate(ObjectDynamic):
+    """
+    Placa de pressão que pode ser ativada por objetos ou players
+    """
+    
+    def __init__(self, position, size, plate_id, sprite_inactive, sprite_active):
+        """
+        Args:
+            position: Posição da placa
+            size: Tamanho da placa
+            plate_id (str): ID único da placa de pressão
+            sprite_inactive: Sprite quando não ativada
+            sprite_active: Sprite quando ativada
+        """
+        super().__init__(position, size, pg.math.Vector2(0, 0))
+        
+        self.plate_id = plate_id
+        self.is_activated = False
+        self.sprite_inactive = sprite_inactive
+        self.sprite_active = sprite_active
+        
+        # Histórico de ativação (para detectar mudanças)
+        self.was_activated = False
+        
+        # Lista de objetos que estão pressionando a placa
+        self.pressing_objects = set()
+        
+        # Preparar sprites
+        self._prepare_sprites()
+    
+    def _prepare_sprites(self):
+        """Prepara os sprites no tamanho correto"""
+        if self.sprite_inactive:
+            self.sprite_inactive = pg.transform.scale(
+                self.sprite_inactive, (int(self._size.x), int(self._size.y)))
+        
+        if self.sprite_active:
+            self.sprite_active = pg.transform.scale(
+                self.sprite_active, (int(self._size.x), int(self._size.y)))
+    
+    def check_activation(self, objects_list):
+        """
+        Verifica se algum objeto está pressionando a placa
+        
+        Args:
+            objects_list: Lista de objetos para verificar (players, blocos, etc.)
+        """
+        self.pressing_objects.clear()
+        
+        for obj in objects_list:
+            if self._is_object_pressing(obj):
+                self.pressing_objects.add(id(obj))  # Usar ID do objeto
+        
+        # Atualizar estado de ativação
+        self.was_activated = self.is_activated
+        self.is_activated = len(self.pressing_objects) > 0
+        
+        return self.is_activated != self.was_activated  # Retorna True se mudou de estado
+    
+    def _is_object_pressing(self, obj):
+        """
+        Verifica se um objeto específico está pressionando a placa
+        Considera que o objeto precisa estar "pisando" na base da placa
+        """
+        try:
+            obj_pos = obj.get_position()
+            obj_size = obj.get_size()
+            
+            # Criar retângulos para verificação de colisão
+            obj_rect = pg.Rect(obj_pos.x, obj_pos.y, obj_size.x, obj_size.y)
+            plate_rect = pg.Rect(self._position.x, self._position.y, self._size.x, self._size.y)
+            
+            # Verificar se há sobreposição horizontal
+            if obj_rect.colliderect(plate_rect):
+                # Verificar se o objeto está "pisando" na placa (parte inferior do objeto na base da placa)
+                object_bottom = obj_pos.y + obj_size.y
+                plate_bottom = self._position.y + self._size.y
+                
+                # Tolerância de alguns pixels para consideração de "pisando"
+                tolerance = 8
+                return abs(object_bottom - plate_bottom) <= tolerance
+                
+        except AttributeError:
+            # Objeto não tem métodos get_position/get_size
+            return False
+        
+        return False
+    
+    def get_plate_id(self):
+        """Retorna o ID da placa"""
+        return self.plate_id
+    
+    def is_active(self):
+        """Retorna se a placa está ativada"""
+        return self.is_activated
+    
+    def state_changed(self):
+        """Retorna se o estado mudou desde a última verificação"""
+        return self.is_activated != self.was_activated
+    
+    def render(self, surface):
+        """Renderiza a placa com o sprite apropriado"""
+        pos = self.get_position()
+        
+        # Escolher sprite baseado no estado
+        current_sprite = self.sprite_active if self.is_activated else self.sprite_inactive
+        
+        if current_sprite:
+            surface.blit(current_sprite, (int(pos.x), int(pos.y)))
+        
+        # Debug: mostrar ID da placa e estado
+        if hasattr(self, '_debug_font'):
+            text = self._debug_font.render(f"{self.plate_id}: {'ON' if self.is_activated else 'OFF'}", 
+                                         True, (255, 255, 255))
+            surface.blit(text, (int(pos.x), int(pos.y - 20)))
+    
+    def update(self, delta_time):
+        """Atualização da placa (não faz nada por enquanto)"""
+        pass
+    
+    def get_info(self):
+        """Retorna informações de debug da placa"""
+        return {
+            'plate_id': self.plate_id,
+            'position': (self._position.x, self._position.y),
+            'size': (self._size.x, self._size.y),
+            'is_activated': self.is_activated,
+            'pressing_objects_count': len(self.pressing_objects)
+        }
+
 class Puzze(ObjectDynamic):
     def __init__(self, position, size, velocity, puzzle_type=PuzzleType.MOVABLE_BLOCK, custom_image=None):
         super().__init__(position, size, velocity)

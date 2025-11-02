@@ -9,7 +9,8 @@ from decoration import Decoration
 from lava import Lava
 from Platform import Platform
 from player import Player
-from puzze import Puzze, PuzzleType
+from puzze import Puzze, PuzzleType, PressurePlate
+from controlledBlock import ControlledBlock, ControlledBlockType
 from secretArea import SecretArea
 
 
@@ -74,6 +75,33 @@ class GameWorld:
             "00000000000000NQQQM000000000000000b222a0",
         ]
 
+        self.controlled_map = [
+            "........................................",
+            "........................................",
+            "........................................",
+            "........................................",
+            "........................................",
+            "........................................",
+            "........................................",
+            "........................................",
+            "........h...............................",
+            "........i3..............................",
+            "........4b3.............................",
+            "........40b3............................",
+            "........400b3...........................",
+            "........4000b3..........................",
+            "........40000b3.................Q.......",
+            "........400000b3....................AB..",
+            "........67777778....................CD..",
+            "........................................",
+            "........................................",
+            "........................................",
+            "........................................",
+            ".....P..................................",
+            "........................................",
+            "........................................",
+        ]
+
         self.background = self._load_background()
         self.tileset = self._load_tileset()
         self.platforms = self._load_platforms()
@@ -83,6 +111,8 @@ class GameWorld:
         self.puzzles = self._load_puzzles()
         self.lavas = self._load_lava()
         self.secret_areas = self._load_secret_areas()  # Carrega áreas secretas
+        self.pressure_plates = self._load_pressure_plates()  # Carrega placas de pressão
+        self.controlled_blocks = self._load_controlled_blocks()  # Carrega blocos controlados
         self.player_sprites = self.load_player_sprites()
         self.player_sprites2 = self.load_player_sprites2()
         self._load_background_music()
@@ -133,8 +163,13 @@ class GameWorld:
 
     def resolve_collisions(self):
 
-        # Combina plataformas estáticas com as dinâmicas
+        # Combina plataformas estáticas com as dinâmicas e blocos controlados sólidos
         all_platforms = self.platforms + self.dynamic_platforms
+        
+        # Adicionar blocos controlados que estão sólidos
+        for controlled_block in self.controlled_blocks:
+            if controlled_block.is_solid_collision():
+                all_platforms.append(controlled_block)
 
         self.collider.resolve_collision(self.player1, all_platforms)
         self.collider.resolve_collision(self.player2, all_platforms)
@@ -332,6 +367,9 @@ class GameWorld:
                 secret_area.is_visible = True
                 secret_area.alpha = min(255, secret_area.alpha + 15)
 
+        # Atualizar placas de pressão
+        self._update_pressure_plates()
+
         # Atualiza timer de abertura da porta
         if self.door_opening:
             self.door_open_timer += delta_time
@@ -350,6 +388,30 @@ class GameWorld:
     def keyboard_events(self):
         self.player1.verify_keyboard()
         self.player2.verify_keyboard()
+
+    def _update_pressure_plates(self):
+        """Atualiza o estado das placas de pressão e blocos controlados"""
+        # Criar lista de objetos que podem ativar placas (players + puzzles móveis)
+        activating_objects = [self.player1, self.player2]
+        
+        # Adicionar blocos móveis que podem ativar placas
+        for puzzle in self.puzzles:
+            if puzzle.get_puzzle_type() == PuzzleType.MOVABLE_BLOCK:
+                activating_objects.append(puzzle)
+        
+        # Verificar cada placa de pressão
+        for plate in self.pressure_plates:
+            state_changed = plate.check_activation(activating_objects)
+            
+            if state_changed:
+                # Se o estado mudou, atualizar blocos controlados
+                self._update_controlled_blocks_for_plate(plate.get_plate_id(), plate.is_active())
+    
+    def _update_controlled_blocks_for_plate(self, plate_id, is_active):
+        """Atualiza blocos controlados por uma placa específica"""
+        for block in self.controlled_blocks:
+            if block.get_pressure_plate_id() == plate_id:
+                block.set_pressure_plate_state(is_active)
 
     def draw(self):
         self.draw_background()
@@ -386,6 +448,10 @@ class GameWorld:
             collectible.render(self.screen)
         for puzzle in self.puzzles:
             puzzle.render(self.screen)
+        for pressure_plate in self.pressure_plates:
+            pressure_plate.render(self.screen)
+        for controlled_block in self.controlled_blocks:
+            controlled_block.render(self.screen)
 
     def draw_score(self):
         score1_text = self.font.render(
@@ -579,19 +645,105 @@ class GameWorld:
         secret_areas = []
         
         level = 2
-        
-        if(level == 1):
-
-            pass
             
         if(level == 2):
             
-            # secret_areas.append(SecretArea(50, 489, 920, 255, '#0F0B0D'))
+            #secret_areas.append(SecretArea(50, 489, 920, 255, '#0F0B0D'))
 
             secret_areas.append(SecretArea(904, 340, 323, 157, '#0F0B0D'))
-            secret_areas.append(SecretArea(1010, 495, 217, 248, '#0F0B0D')) 
+            secret_areas.append(SecretArea(1010, 490, 217, 255, '#0F0B0D')) 
             
         return secret_areas
+
+    def _load_pressure_plates(self):
+
+        pressure_plates = []
+        
+        level = 2  # Define o nível atual (2)
+            
+        if(level == 2):
+
+            sprite_inactive = self.get_sprite(self.tileset, 30, 2, 16)
+            sprite_active = self.get_sprite(self.tileset, 31, 2, 16)
+            
+            plate_chars = {
+
+                'P': 'plate1',
+                'Q': 'plate2'
+            }
+        
+        # Percorrer matriz e criar placas
+        for y, row in enumerate(self.controlled_map):
+            for x, char in enumerate(row):
+                if char in plate_chars:
+                    plate_id = plate_chars[char]
+                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    
+                    plate = PressurePlate(
+                        position=position,
+                        size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+                        plate_id=plate_id,
+                        sprite_inactive=sprite_inactive,
+                        sprite_active=sprite_active
+                    )
+                    pressure_plates.append(plate)
+                    print(f"Placa '{plate_id}' criada em ({x}, {y}) = pos({position.x}, {position.y})")
+        
+        return pressure_plates
+
+    def _load_controlled_blocks(self):
+        """Carrega blocos controlados da matriz controlled_map"""
+        controlled_blocks = []
+        
+        level = 2  # Define o nível atual (2)
+            
+        if(level == 2):
+
+            block_chars = {
+            
+                "0": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (1, 40)), # tile_DIRT
+
+                "3": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (2, 39)), # tile_WOODS_TOP_RIGHT
+                "4": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (0, 40)), # tile_WOODS_MID_LEFT
+
+                "6": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (0, 41)), # tile_WOODS_BOT_LEFT
+                "7": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (1, 41)), # tile_WOODS_BOT_CENTER
+                "8": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (2, 41)), # tile_WOODS_BOT_RIGHT
+
+                "b": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (20, 40)), # tile_WOODS_CORNER_TOP_RIGHT
+                "h": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (23, 40)), # tile_WOODS_STAIRS_AJUST-1
+                "i": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (23, 41)), # tile_WOODS_STAIRS_AJUST-2
+
+                "A": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 39)), # tile_WOODS_TOP_LEFT
+                "B": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 39)), # tile_WOODS_TOP_RIGHT
+                "C": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 41)), # tile_WOODS_BOT_LEFT
+                "D": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 41)), # tile_WOODS_BOT_RIGHT
+            }
+        
+        # Percorrer matriz e criar blocos controlados
+        for y, row in enumerate(self.controlled_map):
+            for x, char in enumerate(row):
+                if char in block_chars:
+                    plate_id, block_type, sprite_coords = block_chars[char]
+                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    
+                    # Extrair sprite específico para este caractere
+                    sprite_x, sprite_y = sprite_coords
+                    block_sprite = self.get_sprite(self.tileset, sprite_x, sprite_y, 16)
+                    
+                    block = ControlledBlock(
+                        position=position,
+                        size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+                        pressure_plate_id=plate_id,
+                        block_type=block_type,
+                        sprite_normal=block_sprite
+                    )
+                    controlled_blocks.append(block)
+                    
+                    behavior = "aparece" if "APPEAR" in block_type else "desaparece"
+                    print(f"Bloco '{char}' criado em ({x}, {y}) = pos({position.x}, {position.y}) | Placa: {plate_id} | {behavior} | Sprite: ({sprite_x}, {sprite_y})")
+        
+        return controlled_blocks
 
     def _load_lava(self):
         lavas = []
@@ -1027,34 +1179,14 @@ class GameWorld:
     # === MÉTODOS DE GERENCIAMENTO DE ÁREAS SECRETAS ===
     
     def add_secret_area(self, x, y, width, height, color_hex):
-        """
-        Adiciona uma nova área secreta ao jogo dinamicamente
-        
-        Args:
-            x (int): Posição X do retângulo
-            y (int): Posição Y do retângulo
-            width (int): Largura do retângulo 
-            height (int): Altura do retângulo
-            color_hex (str): Cor em formato hexadecimal (ex: "#FF0000")
-            
-        Returns:
-            SecretArea: A área secreta criada
-        """
+
         secret_area = SecretArea(x, y, width, height, color_hex)
         self.secret_areas.append(secret_area)
         print(f"Nova área secreta adicionada em ({x}, {y}) com tamanho {width}x{height}")
         return secret_area
     
     def remove_secret_area(self, index):
-        """
-        Remove uma área secreta pelo índice
-        
-        Args:
-            index (int): Índice da área secreta na lista
-            
-        Returns:
-            bool: True se removida com sucesso, False caso contrário
-        """
+
         if 0 <= index < len(self.secret_areas):
             removed_area = self.secret_areas.pop(index)
             print(f"Área secreta removida: {removed_area.get_info()}")
@@ -1062,16 +1194,7 @@ class GameWorld:
         return False
     
     def remove_secret_area_at_position(self, x, y):
-        """
-        Remove áreas secretas que contenham a posição especificada
-        
-        Args:
-            x (int): Posição X a verificar
-            y (int): Posição Y a verificar
-            
-        Returns:
-            int: Número de áreas removidas
-        """
+
         removed_count = 0
         self.secret_areas = [area for area in self.secret_areas 
                            if not area.rect.collidepoint(x, y)]
@@ -1082,18 +1205,48 @@ class GameWorld:
         return removed_count
     
     def get_secret_areas_info(self):
-        """
-        Retorna informações de todas as áreas secretas para debug
-        
-        Returns:
-            list: Lista com informações de cada área secreta
-        """
+
         return [area.get_info() for area in self.secret_areas]
     
     def clear_all_secret_areas(self):
-        """
-        Remove todas as áreas secretas
-        """
+        
         count = len(self.secret_areas)
         self.secret_areas.clear()
         print(f"Todas as {count} áreas secretas foram removidas")
+
+    # === MÉTODOS DE GERENCIAMENTO DE PLACAS DE PRESSÃO ===
+    
+    def add_pressure_plate(self, x, y, plate_id, sprite_inactive, sprite_active):
+
+        plate = PressurePlate(
+            position=pygame.math.Vector2(x, y),
+            size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+            plate_id=plate_id,
+            sprite_inactive=sprite_inactive,
+            sprite_active=sprite_active
+        )
+        self.pressure_plates.append(plate)
+        print(f"Placa de pressão '{plate_id}' adicionada em ({x}, {y})")
+        return plate
+    
+    def add_controlled_block(self, x, y, plate_id, block_type, sprite_normal, sprite_disabled=None):
+
+        block = ControlledBlock(
+            position=pygame.math.Vector2(x, y),
+            size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+            pressure_plate_id=plate_id,
+            block_type=block_type,
+            sprite_normal=sprite_normal,
+            sprite_disabled=sprite_disabled
+        )
+        self.controlled_blocks.append(block)
+        print(f"Bloco controlado adicionado em ({x}, {y}) para placa '{plate_id}'")
+        return block
+    
+    def get_pressure_plate_info(self):
+        """Retorna informações de debug das placas de pressão"""
+        return [plate.get_info() for plate in self.pressure_plates]
+    
+    def get_controlled_blocks_info(self):
+        """Retorna informações de debug dos blocos controlados"""
+        return [block.get_info() for block in self.controlled_blocks]
