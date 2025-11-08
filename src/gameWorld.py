@@ -1,5 +1,7 @@
 import os
 import pygame
+import json
+from datetime import datetime
 
 from animated_gif import AnimatedGif
 from collider import Collider
@@ -57,9 +59,11 @@ class GameWorld:
         self._load_background_music()
         self.collider = Collider()
         self.game_over = False
-        self.has_key = False  # Variável para registrar se a chave foi coletada
+        self.has_key = False  
+        self.player1_name = 'Pastor (Brancas)'
+        self.player2_name = 'Pastor (Pretas)'
+        self.scores_saved = False
 
-        # Variáveis para controle da porta
         self.door_opening = False  # Flag para indicar se a porta está sendo aberta
         self.door_open_timer = 0.0  # Timer para delay de abertura da porta
         self.door_open_delay = 0.3  # Delay de 0.3s para abrir a porta
@@ -320,12 +324,13 @@ class GameWorld:
             puzzle.render(self.screen)
 
     def draw_score(self):
+        # Use provided player names
         score1_text = self.font.render(
-            f"Pastor (Brancas): {self.player1.get_score()}", True, (255, 255, 255))
+            f"{self.player1_name}: {self.player1.get_score()}", True, (255, 255, 255))
         self.screen.blit(score1_text, (10, 10))
 
         score2_text = self.font.render(
-            f"Pastor (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
+            f"{self.player2_name}: {self.player2.get_score()}", True, (255, 255, 255))
         self.screen.blit(score2_text, (10, 50))
 
         # Desenha indicador de chave
@@ -380,13 +385,13 @@ class GameWorld:
 
         # Texto de pontuação
         score1_text = self.subtitle_font.render(
-            f"Pastor (Brancas): {self.player1.get_score()}", True, (255, 255, 255))
+            f"{self.player1_name}: {self.player1.get_score()}", True, (255, 255, 255))
         score1_rect = score1_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30))
         self.screen.blit(score1_text, score1_rect)
 
         score2_text = self.subtitle_font.render(
-            f"Pastor (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
+            f"{self.player2_name}: {self.player2.get_score()}", True, (255, 255, 255))
         score2_rect = score2_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
         self.screen.blit(score2_text, score2_rect)
@@ -404,6 +409,10 @@ class GameWorld:
         quit_rect = quit_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70))
         self.screen.blit(quit_text, quit_rect)
+        # Save scores once
+        if not getattr(self, 'scores_saved', False):
+            self.save_scores('GAME OVER')
+            self.scores_saved = True
 
     def _draw_victory(self):
         """Desenha a tela de vitória"""
@@ -427,13 +436,13 @@ class GameWorld:
 
         # Texto de pontuação final
         score1_text = self.instruction_font.render(
-            f"Pastor (Brancas): {self.player1.get_score()}", True, (255, 255, 255))
+            f"{self.player1_name}: {self.player1.get_score()}", True, (255, 255, 255))
         score1_rect = score1_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
         self.screen.blit(score1_text, score1_rect)
 
         score2_text = self.instruction_font.render(
-            f"Pastor (Pretas): {self.player2.get_score()}", True, (255, 255, 255))
+            f"{self.player2_name}: {self.player2.get_score()}", True, (255, 255, 255))
         score2_rect = score2_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40))
         self.screen.blit(score2_text, score2_rect)
@@ -451,6 +460,43 @@ class GameWorld:
         quit_rect = quit_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 110))
         self.screen.blit(quit_text, quit_rect)
+        # Save scores once
+        if not getattr(self, 'scores_saved', False):
+            self.save_scores('VICTORY')
+            self.scores_saved = True
+
+    def save_scores(self, reason='RESULT'):
+        base_path = os.path.dirname(__file__)
+        file_path = os.path.join(base_path, '..', 'resources', 'scores.json')
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        entry = {
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "reason": reason,
+            "player1": {"name": self.player1_name, "score": self.player1.get_score()},
+            "player2": {"name": self.player2_name, "score": self.player2.get_score()},
+        }
+
+        # Read existing JSON array (if any), append and write back
+        data = []
+        try:
+            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if not isinstance(data, list):
+                    data = [data]
+        except (json.JSONDecodeError, OSError) as e:
+            # If file is corrupted or unreadable, overwrite with a fresh list
+            print(f"Warning: could not read existing scores.json: {e}")
+            data = []
+
+        data.append(entry)
+
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except OSError as e:
+            print(f"Erro ao salvar scores em JSON: {e}")
 
     def _load_background(self):
         base_path = os.path.dirname(__file__)

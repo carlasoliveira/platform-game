@@ -5,6 +5,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 import os
 
 from menu import Menu
+from score import Score
 
 
 class StateMachine(Enum):
@@ -32,28 +33,29 @@ class GameManager:
         # Inicialização do mundo do jogo (será criado mais tarde, quando for INICIO)
         self.world = None 
         self.world_initialized = False # Para saber se o GameWorld já foi criado
+        # Score (history) screen
+        self.score = None
+        self.score_initialized = False
 
     def run(self):
         while self.running:
             self._handle_events() 
             
             delta_time = self._calculate_delta_time()
-
-            if self.state == StateMachine.MENU:
-                print('No estado menu')
                 
-                if self.menu.handle_event(): 
-                    print('Iniciou o jogo')
-                    self.state = StateMachine.INICIO
-                    
-                self.menu.draw(self.screen)
-                pygame.display.update()
-                self.clock.tick(60)
-                
-            elif self.state == StateMachine.INICIO:
+            if self.state == StateMachine.INICIO:
                 if not self.world_initialized:
                     self.world = GameWorld(self.screen)
                     self.world._load_background_music()
+                    # Pass player names from menu into the world (if provided)
+                    try:
+                        # menu stores names when Start is pressed
+                        if hasattr(self.menu, 'player_name_1') and self.menu.player_name_1.strip() != "":
+                            self.world.player1_name = self.menu.player_name_1
+                        if hasattr(self.menu, 'player_name_2') and self.menu.player_name_2.strip() != "":
+                            self.world.player2_name = self.menu.player_name_2
+                    except Exception:
+                        pass
                     self.world_initialized = True
                     
                 if self.world.game_over:
@@ -78,6 +80,35 @@ class GameManager:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
+            # State-specific event delegation
+            if self.state == StateMachine.MENU:
+                # delegate single event to menu
+                res = self.menu.handle_event(event)
+                if res == 'start':
+                    print('Iniciou o jogo')
+                    self.state = StateMachine.INICIO
+                elif res == 'history':
+                    print('Abrindo histórico')
+                    self.state = StateMachine.FIM
+                    if not self.score_initialized:
+                        self.score = Score()
+                        self.score_initialized = True
+                # draw menu (kept here to match previous structure)
+                self.menu.draw(self.screen)
+                pygame.display.update()
+                self.clock.tick(60)
+
+            elif self.state == StateMachine.FIM:
+                # delegate to score screen
+                if self.score is None:
+                    self.score = Score()
+                res = self.score.handle_event(event)
+                if res == 'back':
+                    self.state = StateMachine.MENU
+                # draw score screen
+                self.score.draw(self.screen)
+                pygame.display.update()
+                self.clock.tick(60)
                 
     def _calculate_delta_time(self):
         current_time = pygame.time.get_ticks()
