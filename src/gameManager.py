@@ -5,6 +5,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 import os
 
 from menu import Menu
+from score import Score
 
 
 class StateMachine(Enum):
@@ -32,6 +33,9 @@ class GameManager:
         # Inicialização do mundo do jogo (será criado mais tarde, quando for INICIO)
         self.world = None 
         self.world_initialized = False # Para saber se o GameWorld já foi criado
+        # Score (history) screen
+        self.score = None
+        self.score_initialized = False
 
     def run(self):
         while self.running:
@@ -76,14 +80,33 @@ class GameManager:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
+            # State-specific event delegation
             if self.state == StateMachine.MENU:
-                print('No estado menu')
-
-                if self.menu.handle_event(event): 
+                # delegate single event to menu
+                res = self.menu.handle_event(event)
+                if res == 'start':
                     print('Iniciou o jogo')
                     self.state = StateMachine.INICIO
-                    
+                elif res == 'history':
+                    print('Abrindo histórico')
+                    self.state = StateMachine.FIM
+                    if not self.score_initialized:
+                        self.score = Score()
+                        self.score_initialized = True
+                # draw menu (kept here to match previous structure)
                 self.menu.draw(self.screen)
+                pygame.display.update()
+                self.clock.tick(60)
+
+            elif self.state == StateMachine.FIM:
+                # delegate to score screen
+                if self.score is None:
+                    self.score = Score()
+                res = self.score.handle_event(event)
+                if res == 'back':
+                    self.state = StateMachine.MENU
+                # draw score screen
+                self.score.draw(self.screen)
                 pygame.display.update()
                 self.clock.tick(60)
                 

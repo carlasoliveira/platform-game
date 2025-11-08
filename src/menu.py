@@ -17,6 +17,10 @@ class Menu:
         self.start_button = pygame.Rect(
             SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 20, 200, 50)
         self.start_button_hovered = False
+        # History button below start
+        self.history_button = pygame.Rect(
+            SCREEN_WIDTH // 2 - 100, self.start_button.y + self.start_button.height + 12, 200, 40)
+        self.history_button_hovered = False
 
         self.input_boxes = [pygame.Rect(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 120, 300, 36),
                             pygame.Rect(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 60, 300, 36)]
@@ -47,9 +51,17 @@ class Menu:
         button_text_rect = button_text.get_rect(center=self.start_button.center)
         screen.blit(button_text, button_text_rect)
 
+        # history button
+        hist_color = (120, 120, 200) if self.history_button_hovered else (80, 80, 140)
+        pygame.draw.rect(screen, hist_color, self.history_button)
+        pygame.draw.rect(screen, (255, 255, 255), self.history_button, 2)
+        hist_text = self.instruction_font.render("HISTORICO DE PONTOS", True, (255, 255, 255))
+        hist_rect = hist_text.get_rect(center=self.history_button.center)
+        screen.blit(hist_text, hist_rect)
+
         # quit instruction
         quit_text = self.instruction_font.render("Press ESC to Quit", True, (200, 200, 200))
-        quit_rect = quit_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100))
+        quit_rect = quit_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT + 10// 2 + 100))
         screen.blit(quit_text, quit_rect)
 
         # Draw input boxes labels and boxes
@@ -70,6 +82,7 @@ class Menu:
         # Mouse movement: hover start button
         if event.type == pygame.MOUSEMOTION:
             self.start_button_hovered = self.start_button.collidepoint(event.pos)
+            self.history_button_hovered = self.history_button.collidepoint(event.pos)
 
         # Mouse click: select input or click start
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -88,9 +101,13 @@ class Menu:
                     # store into player_name fields
                     self.player_name_1 = self.input_texts[0].strip()
                     self.player_name_2 = self.input_texts[1].strip()
-                    return True
+                    return 'start'
                 else:
                     return False
+
+            # history button click
+            if event.button == 1 and self.history_button.collidepoint(event.pos):
+                return 'history'
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
