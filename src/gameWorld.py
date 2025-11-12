@@ -11,40 +11,23 @@ from decoration import Decoration
 from lava import Lava
 from Platform import Platform
 from player import Player
-from puzze import Puzze, PuzzleType
+from puzze import Puzze, PuzzleType, PressurePlate
+from controlledBlock import ControlledBlock, ControlledBlockType
+from secretArea import SecretArea
 
+LEVEL = 2
 
 class GameWorld:
     def __init__(self, screen):
         self.screen = screen
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
-        self.map = [
-            "2..................................40000",
-            "2.................................470000",
-            "2........#.......................4700000",
-            "2................................1000000",
-            "2.....%...@..........!...........100YY00",
-            "2...........HI...................10Z(.X0",
-            "2...........FG...................XZ.)..1",
-            "2........d.wDE../...$..a./.....B.....K.1",
-            "2s...W33333333333333333333335.b........1",
-            "65....XYYYY00000000000000000633335843337",
-            "02.........XYYYYYYYYYYYYYY00000000000000",
-            "02e.......................XY000000YYYY00",
-            "065.........................1000YZ....X0",
-            "002b.........B.......%.......XYZ.......1",
-            "0065a......a.cb.....................awe1",
-            "000635....W333333U..........B......W3330",
-            "00YYYZ....XYYYYYZ....bd.e....a......XYY0",
-            "0Z..................43335..4335d.......1",
-            "2...................XYYYZ..XYYYU.......1",
-            "2......................................1",
-            "2as.........*......................f...1",
-            "635.............f...ab.........a..433337",
-            "002d........w..43333335..bse.43333700000",
-            "0063588888843337000000633333370000000000",
-        ]
+
+        # Selecionar mapa principal com base na variável global LEVEL
+        self.map = self.mapSelect()
+
+        # Selecionar mapa controlado com base na variável global LEVEL
+        self.controlled_map = self.mapControlledSelect()
 
         self.background = self._load_background()
         self.tileset = self._load_tileset()
@@ -54,6 +37,9 @@ class GameWorld:
         self.collectibles = self._load_collectibles()
         self.puzzles = self._load_puzzles()
         self.lavas = self._load_lava()
+        self.secret_areas = self._load_secret_areas()  # Carrega áreas secretas
+        self.pressure_plates = self._load_pressure_plates()  # Carrega placas de pressão
+        self.controlled_blocks = self._load_controlled_blocks()  # Carrega blocos controlados
         self.player_sprites = self.load_player_sprites()
         self.player_sprites2 = self.load_player_sprites2()
         self._load_background_music()
@@ -78,9 +64,14 @@ class GameWorld:
 
         # Carrega sons
         self._load_door_sound()
+        # Som de bloco em movimento/controle
+        self._load_moving_block_sound()
+
+        # Inicializar posições dos jogadores a partir do mapping por LEVEL
+        spawn1, spawn2 = self.spawnSelect()
 
         self.player1 = Player(
-            position=pygame.math.Vector2(568, 620),
+            position=pygame.math.Vector2(spawn1[0], spawn1[1]),
             sprites=self.player_sprites2,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
@@ -89,13 +80,14 @@ class GameWorld:
         )
 
         self.player2 = Player(
-            position=pygame.math.Vector2(650, 620),
+            position=pygame.math.Vector2(spawn2[0], spawn2[1]),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
             my_keys=[pygame.K_a, pygame.K_d, pygame.K_w],
             player_type="player2"
         )
+
         base_path = os.path.dirname(__file__)
         font_path = os.path.join(
             base_path, '..', 'resources', 'font', 'PotatoFont.ttf')
@@ -106,8 +98,13 @@ class GameWorld:
 
     def resolve_collisions(self):
 
-        # Combina plataformas estáticas com as dinâmicas
+        # Combina plataformas estáticas com as dinâmicas e blocos controlados sólidos
         all_platforms = self.platforms + self.dynamic_platforms
+        
+        # Adicionar blocos controlados que estão sólidos
+        for controlled_block in self.controlled_blocks:
+            if controlled_block.is_solid_collision():
+                all_platforms.append(controlled_block)
 
         self.collider.resolve_collision(self.player1, all_platforms)
         self.collider.resolve_collision(self.player2, all_platforms)
@@ -141,6 +138,104 @@ class GameWorld:
 
         # Verifica se alguma caixa (puzzle) caiu na lava
         self._check_puzzle_lava_collision()
+
+    # === Selectors baseados em LEVEL ===
+    def mapSelect(self):
+
+        if(LEVEL == 1):
+            return [
+                "2..................................40000",
+                "2.................................470000",
+                "2........#.......................4700000",
+                "2................................1000000",
+                "2.....%...@..........!...........100YY00",
+                "2...........HI...................10Z(.X0",
+                "2...........FG...................XZ.)..1",
+                "2........d.wDE../...$..a./.....B.....K.1",
+                "2s...W33333333333333333333335.b........1",
+                "65....XYYYY00000000000000000633335L43337",
+                "02.........XYYYYYYYYYYYYYY00000000000000",
+                "02e.......................XY000000YYYY00",
+                "065.........................1000YZ....X0",
+                "002b.........B.......%.......XYZ.......1",
+                "0065a......a.cb.....................awe1",
+                "000635....W333333U..........B......W3330",
+                "00YYYZ....XYYYYYZ....bd.e....a......XYY0",
+                "0Z..................43335..4335d.......1",
+                "2...................XYYYZ..XYYYU.......1",
+                "2......................................1",
+                "2as.........*......................f...1",
+                "635.............f...ab.........a..433337",
+                "002d........w..43333335..bse.43333700000",
+                "00635LLLLLL43337000000633333370000000000",
+        ]
+
+        if(LEVEL == 2):
+            return [
+                "0000000000000000000000000000000000000000",
+                "00d777777777777777777c000d777777777777c0",
+                "005...<........<.....40005.....<......40",
+                "005.....@...#........67778......-...wp40",
+                "005..........................X.....^..40",
+                "005..............HI...................40",
+                "005..B...........FG......~.j.....¨s...40",
+                "005..............DE....pp..p.´K.|.....40",
+                "00b22223......122222222222222222222222a0",
+                "0d777778......6777777777777c000000000000",
+                "05..<...............<......6777777777c00",
+                "05.....................V.............6c0",
+                "05..%.........................l.......40",
+                "05!.................k........~.13.....40",
+                "05................mJ....s......45.....40",
+                "0b222223........1222222223..122ab223..40",
+                "00P77778........6777777778..670d7778..40",
+                "00S..z..................z....pR5......40",
+                "00S........................:..R5w....p40",
+                "00S..........ç.......w...&....R5p..:..40",
+                "00Sx........*).....y*/...;....R5/.s...40",
+                "00NU....*.( TQU...*TU)&p).)&.*R5..p...40",
+                "000NQQQQQQQQM0SLLLTMNQQQQQQQQQMb223...40",
+                "00000000000000NQQQM000000000000000b222a0",
+            ]
+
+    def mapControlledSelect(self):
+
+        if(LEVEL == 2):
+            return [
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........h...............................",
+                "........i3..............................",
+                "........4b3.............................",
+                "........40b3...................WX.......",
+                "........400b3..................YZ.......",
+                "........4000b3..........................",
+                "........40000b3...................Q.....",
+                "........400000b3....................AB..",
+                "........67777778....................CD..",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                ".....P..................................",
+                "........................................",
+                "........................................",
+            ]
+        return []
+
+    def spawnSelect(self):
+
+        if(LEVEL == 1):
+            return (650, 620), (568, 620)
+
+        if(LEVEL == 2):
+            return (120, 420), (180, 420)
 
     def _check_door_interactions(self):
         """Verifica se algum jogador tocou na porta e abre se tiver a chave"""
@@ -272,6 +367,34 @@ class GameWorld:
         for lava in self.lavas:
             lava.update(delta_time_ms)
 
+        # Atualizar áreas secretas baseado na posição dos players
+        for secret_area in self.secret_areas:
+            # Verificar collision com ambos os players
+            player1_pos = self.player1.get_position()
+            player1_size = self.player1.get_size()
+            player1_rect = pygame.Rect(player1_pos.x, player1_pos.y, 
+                                     player1_size.x, player1_size.y)
+            
+            player2_pos = self.player2.get_position()
+            player2_size = self.player2.get_size()
+            player2_rect = pygame.Rect(player2_pos.x, player2_pos.y,
+                                     player2_size.x, player2_size.y)
+            
+            # Atualizar baseado se qualquer player está na área
+            player1_in_area = secret_area.check_player_collision(player1_rect)
+            player2_in_area = secret_area.check_player_collision(player2_rect)
+            
+            # Se qualquer player estiver na área, ela deve ficar semi-transparente (50%)
+            if player1_in_area or player2_in_area:
+                secret_area.is_visible = True
+                secret_area.alpha = max(100, secret_area.alpha - 15)
+            else:
+                secret_area.is_visible = True
+                secret_area.alpha = min(255, secret_area.alpha + 15)
+
+        # Atualizar placas de pressão
+        self._update_pressure_plates()
+
         # Atualiza timer de abertura da porta
         if self.door_opening:
             self.door_open_timer += delta_time
@@ -291,12 +414,46 @@ class GameWorld:
         self.player1.verify_keyboard()
         self.player2.verify_keyboard()
 
+    def _update_pressure_plates(self):
+        """Atualiza o estado das placas de pressão e blocos controlados"""
+        # Criar lista de objetos que podem ativar placas (players + puzzles móveis)
+        activating_objects = [self.player1, self.player2]
+        
+        # Adicionar blocos móveis que podem ativar placas
+        for puzzle in self.puzzles:
+            if puzzle.get_puzzle_type() == PuzzleType.MOVABLE_BLOCK:
+                activating_objects.append(puzzle)
+        
+        # Verificar cada placa de pressão
+        for plate in self.pressure_plates:
+            state_changed = plate.check_activation(activating_objects)
+            
+            if state_changed:
+                # Se o estado mudou, atualizar blocos controlados
+                self._update_controlled_blocks_for_plate(plate.get_plate_id(), plate.is_active())
+                # Tocar som de bloco/movimento quando a placa muda de estado (ativa/desativa)
+                try:
+                    if hasattr(self, 'moving_block_sound') and self.moving_block_sound:
+                        self.moving_block_sound.play()
+                except Exception:
+                    pass
+    
+    def _update_controlled_blocks_for_plate(self, plate_id, is_active):
+        """Atualiza blocos controlados por uma placa específica"""
+        for block in self.controlled_blocks:
+            if block.get_pressure_plate_id() == plate_id:
+                block.set_pressure_plate_state(is_active)
+
     def draw(self):
         self.draw_background()
         self.draw_tiles()
         self.draw_score()
         self.player1.render(self.screen)
         self.player2.render(self.screen)
+        
+        # Renderizar áreas secretas por último (para sobrepor tudo, incluindo players)
+        for secret_area in self.secret_areas:
+            secret_area.render(self.screen)
 
         # Desenha popup de vitória se necessário
         if self.victory_achieved:
@@ -322,6 +479,10 @@ class GameWorld:
             collectible.render(self.screen)
         for puzzle in self.puzzles:
             puzzle.render(self.screen)
+        for pressure_plate in self.pressure_plates:
+            pressure_plate.render(self.screen)
+        for controlled_block in self.controlled_blocks:
+            controlled_block.render(self.screen)
 
     def draw_score(self):
         # Use provided player names
@@ -500,8 +661,13 @@ class GameWorld:
 
     def _load_background(self):
         base_path = os.path.dirname(__file__)
-        bg_path = os.path.join(base_path, '..', 'resources',
-                               'graphics', 'background.png')
+
+        if(LEVEL == 1):
+            bg_path = os.path.join(base_path, '..', 'resources',
+                                'graphics', 'background.png')
+        if(LEVEL == 2):
+            bg_path = os.path.join(base_path, '..', 'resources',
+                                'graphics', 'background2.png')
         bg = pygame.image.load(bg_path)
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -546,6 +712,108 @@ class GameWorld:
                     collectibles.append(collectible)
         return collectibles
 
+    def _load_secret_areas(self):
+        secret_areas = []
+            
+        if(LEVEL == 2):
+            
+            #secret_areas.append(SecretArea(50, 489, 920, 255, '#0F0B0D'))
+            secret_areas.append(SecretArea(1000, 340, 227, 157, '#0F0B0D'))
+            secret_areas.append(SecretArea(1010, 490, 217, 255, '#0F0B0D')) 
+            
+        return secret_areas
+
+    def _load_pressure_plates(self):
+
+        pressure_plates = []
+            
+        if(LEVEL == 2):
+
+            sprite_inactive = self.get_sprite(self.tileset, 30, 2, 16)
+            sprite_active = self.get_sprite(self.tileset, 31, 2, 16)
+            
+            plate_chars = {
+
+                'P': 'plate1',
+                'Q': 'plate2'
+            }
+        
+        # Percorrer matriz e criar placas
+        for y, row in enumerate(self.controlled_map):
+            for x, char in enumerate(row):
+                if char in plate_chars:
+                    plate_id = plate_chars[char]
+                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    
+                    plate = PressurePlate(
+                        position=position,
+                        size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+                        plate_id=plate_id,
+                        sprite_inactive=sprite_inactive,
+                        sprite_active=sprite_active
+                    )
+                    pressure_plates.append(plate)
+                    print(f"Placa '{plate_id}' criada em ({x}, {y}) = pos({position.x}, {position.y})")
+        
+        return pressure_plates
+
+    def _load_controlled_blocks(self):
+        """Carrega blocos controlados da matriz controlled_map"""
+        controlled_blocks = []
+            
+        if(LEVEL == 2):
+
+            block_chars = {
+            
+                "0": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (1, 40)), # tile_DIRT
+
+                "3": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (2, 39)), # tile_WOODS_TOP_RIGHT
+                "4": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (0, 40)), # tile_WOODS_MID_LEFT
+
+                "6": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (0, 41)), # tile_WOODS_BOT_LEFT
+                "7": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (1, 41)), # tile_WOODS_BOT_CENTER
+                "8": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (2, 41)), # tile_WOODS_BOT_RIGHT
+
+                "b": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (20, 40)), # tile_WOODS_CORNER_TOP_RIGHT
+                "h": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (23, 40)), # tile_WOODS_STAIRS_AJUST-1
+                "i": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (23, 41)), # tile_WOODS_STAIRS_AJUST-2
+
+                "W": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 39)), # tile_WOODS_TOP_LEFT
+                "X": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 39)), # tile_WOODS_TOP_RIGHT
+                "Y": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 41)), # tile_WOODS_BOT_LEFT
+                "Z": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 41)), # tile_WOODS_BOT_RIGHT
+
+                "A": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 39)), # tile_WOODS_TOP_LEFT
+                "B": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 39)), # tile_WOODS_TOP_RIGHT
+                "C": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 41)), # tile_WOODS_BOT_LEFT
+                "D": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 41)), # tile_WOODS_BOT_RIGHT
+            }
+        
+        # Percorrer matriz e criar blocos controlados
+        for y, row in enumerate(self.controlled_map):
+            for x, char in enumerate(row):
+                if char in block_chars:
+                    plate_id, block_type, sprite_coords = block_chars[char]
+                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    
+                    # Extrair sprite específico para este caractere
+                    sprite_x, sprite_y = sprite_coords
+                    block_sprite = self.get_sprite(self.tileset, sprite_x, sprite_y, 16)
+                    
+                    block = ControlledBlock(
+                        position=position,
+                        size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+                        pressure_plate_id=plate_id,
+                        block_type=block_type,
+                        sprite_normal=block_sprite
+                    )
+                    controlled_blocks.append(block)
+                    
+                    behavior = "aparece" if "APPEAR" in block_type else "desaparece"
+                    print(f"Bloco '{char}' criado em ({x}, {y}) = pos({position.x}, {position.y}) | Placa: {plate_id} | {behavior} | Sprite: ({sprite_x}, {sprite_y})")
+        
+        return controlled_blocks
+
     def _load_lava(self):
         lavas = []
 
@@ -562,7 +830,7 @@ class GameWorld:
 
         for y, row in enumerate(self.map):
             for x, tile in enumerate(row):
-                if tile == "8":
+                if tile == "L":
                     position = pygame.math.Vector2(
                         x * TILE_SIZE, y * TILE_SIZE)
                     size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
@@ -606,100 +874,240 @@ class GameWorld:
     def _load_platforms(self):
         platforms = []
 
-        plataform_tile_map = {
-            "0": self.get_sprite(self.tileset, 1, 8, 16), # tile_DIRT
-            "1": self.get_sprite(self.tileset, 0, 8, 16), # tile_DIRT_EDGE_LEFT
-            "2": self.get_sprite(self.tileset, 2, 8, 16), # tile_DIRT_EDGE_RIGHT
+        if(LEVEL == 1):
+            plataform_tile_map = {
+                "0": self.get_sprite(self.tileset, 1, 8, 16), # tile_DIRT
+                "1": self.get_sprite(self.tileset, 0, 8, 16), # tile_DIRT_EDGE_LEFT
+                "2": self.get_sprite(self.tileset, 2, 8, 16), # tile_DIRT_EDGE_RIGHT
 
-            "3": self.get_sprite(self.tileset, 1, 7, 16), # tile_GRASS
-            "4": self.get_sprite(self.tileset, 0, 7, 16), # tile_GRASS_EDGE_LEFT
-            "5": self.get_sprite(self.tileset, 2, 7, 16), # tile_GRASS_EDGE_RIGHT
+                "3": self.get_sprite(self.tileset, 1, 7, 16), # tile_GRASS
+                "4": self.get_sprite(self.tileset, 0, 7, 16), # tile_GRASS_EDGE_LEFT
+                "5": self.get_sprite(self.tileset, 2, 7, 16), # tile_GRASS_EDGE_RIGHT
 
-            "W": self.get_sprite(self.tileset, 0, 10, 16), # tile_ONLY_GRASS_LEFT
-            "U": self.get_sprite(self.tileset, 2, 10, 16), # tile_ONLY_GRASS_RIGHT
-            "V": self.get_sprite(self.tileset, 1, 10, 16), # tile_ONLY_GRASS_CENTER
+                "W": self.get_sprite(self.tileset, 0, 10, 16), # tile_ONLY_GRASS_LEFT
+                "U": self.get_sprite(self.tileset, 2, 10, 16), # tile_ONLY_GRASS_RIGHT
+                "V": self.get_sprite(self.tileset, 1, 10, 16), # tile_ONLY_GRASS_CENTER
 
+                
+                "6": self.get_sprite(self.tileset, 4, 8, 16), # tile_GRASS_EDGE_TOP_RIGHT
+                "7": self.get_sprite(self.tileset, 5, 8, 16), # tile_GRASS_EDGE_TOP_LEFT
+
+                "X": self.get_sprite(self.tileset, 0, 9, 16), # tile_DIRT_BOTTOM_LEFT
+                "Y": self.get_sprite(self.tileset, 1, 9, 16), # tile_DIRT_BOTTOM
+                "Z": self.get_sprite(self.tileset, 2, 9, 16), # tile_DIRT_BOTTOM_right
+            }
+
+        if(LEVEL == 2):
+            plataform_tile_map = {
+                "0": self.get_sprite(self.tileset, 1, 40, 16), # tile_DIRT
+
+                "1": self.get_sprite(self.tileset, 0, 39, 16), # tile_WOODS_TOP_LEFT
+                "2": self.get_sprite(self.tileset, 1, 39, 16), # tile_WOODS_TOP_CENTER
+                "3": self.get_sprite(self.tileset, 2, 39, 16), # tile_WOODS_TOP_RIGHT
+
+                "4": self.get_sprite(self.tileset, 0, 40, 16), # tile_WOODS_MID_LEFT
+                "5": self.get_sprite(self.tileset, 2, 40, 16), # tile_WOODS_MID_RIGHT
+
+                "6": self.get_sprite(self.tileset, 0, 41, 16), # tile_WOODS_BOT_LEFT
+                "7": self.get_sprite(self.tileset, 1, 41, 16), # tile_WOODS_BOT_CENTER
+                "8": self.get_sprite(self.tileset, 2, 41, 16), # tile_WOODS_BOT_RIGHT
+
+                "a": self.get_sprite(self.tileset, 21, 40, 16), # tile_WOODS_CORNER_TOP_LEFT
+                "b": self.get_sprite(self.tileset, 20, 40, 16), # tile_WOODS_CORNER_TOP_RIGHT
+                "c": self.get_sprite(self.tileset, 21, 39, 16), # tile_WOODS_CORNER_BOT_LEFT
+                "d": self.get_sprite(self.tileset, 20, 39, 16), # tile_WOODS_CORNER_BOT_RIGHT
+
+                "e": self.get_sprite(self.tileset, 23, 40, 16), # tile_WOODS_ISLAND_TOP
+                "f": self.get_sprite(self.tileset, 3, 40, 16), # tile_WOODS_ISLAND_MID
+                "g": self.get_sprite(self.tileset, 3, 41, 16), # tile_WOODS_ISLAND_BOT
+
+                "h": self.get_sprite(self.tileset, 23, 40, 16), # tile_WOODS_STAIRS_AJUST-1
+                "i": self.get_sprite(self.tileset, 23, 41, 16), # tile_WOODS_STAIRS_AJUST-2
+
+                "p": self.get_sprite(self.tileset, 28, 2, 16), # tile_BOX-1
+
+                "T": self.get_sprite(self.tileset, 16, 3, 16), # tile_STONE_TOP_LEFT
+                "Q": self.get_sprite(self.tileset, 17, 3, 16), # tile_STONE_TOP_CENTER
+                "U": self.get_sprite(self.tileset, 18, 3, 16), # tile_STONE_TOP_RIGHT
+
+                "R": self.get_sprite(self.tileset, 16, 4, 16), # tile_STONE_MID_LEFT
+                "S": self.get_sprite(self.tileset, 18, 4, 16), # tile_STONE_MID_RIGHT
+
+                "M": self.get_sprite(self.tileset, 21, 43, 16), # tile_STONE_CORNER_TOP_LEFT
+                "N": self.get_sprite(self.tileset, 20, 43, 16), # tile_STONE_CORNER_TOP_RIGHT
+                "O": self.get_sprite(self.tileset, 21, 42, 16), # tile_STONE_CORNER_BOT_LEFT
+                "P": self.get_sprite(self.tileset, 20, 42, 16), # tile_STONE_CORNER_BOT_RIGHT
             
-            "6": self.get_sprite(self.tileset, 4, 8, 16), # tile_GRASS_EDGE_TOP_RIGHT
-            "7": self.get_sprite(self.tileset, 5, 8, 16), # tile_GRASS_EDGE_TOP_LEFT
+                ":": self._make_decoration_block_auto((21,20), 3, 4), # tile_BLOCK_BOOKSHELF-1
+                ";": self._make_decoration_block_auto((25,20), 2, 2), # tile_BLOCK_BOOKSHELF-2
+                "/": self._make_decoration_block_auto((25,22), 2, 2), # tile_BLOCK_BOOKSHELF-3
+                "^": self._make_decoration_block_auto((24,4), 3, 4), # tile_BLOCK_BOOKSHELF-4
+                "~": self._make_decoration_block_auto((28,6), 2, 2), # tile_BLOCK_BOOKSHELF-5
 
-            "X": self.get_sprite(self.tileset, 0, 9, 16), # tile_DIRT_BOTTOM_LEFT
-            "Y": self.get_sprite(self.tileset, 1, 9, 16), # tile_DIRT_BOTTOM
-            "Z": self.get_sprite(self.tileset, 2, 9, 16), # tile_DIRT_BOTTOM_right
-        }
+                "|": self._make_decoration_block_auto((31,15), 3, 1), # tile_BLOCK_BED
 
-        for y, row in enumerate(self.map):
-            for x, tile_char in enumerate(row):
-                if tile_char in plataform_tile_map:
-                    img = pygame.transform.scale(
-                        plataform_tile_map[tile_char], (TILE_SIZE, TILE_SIZE))
-                    position = pygame.math.Vector2(
-                        x * TILE_SIZE, y * TILE_SIZE)
-                    size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
-                    platforms.append(Platform(position, size, img))
+                "J": self._make_decoration_block_auto((26,16), 3, 1), # tile_BLOCK_TABLE
+            }
+
+        # Build platforms if a tile map for platforms was defined for the current level
+        if 'plataform_tile_map' in locals():
+            for y, row in enumerate(self.map):
+                for x, tile_char in enumerate(row):
+                    if tile_char in plataform_tile_map:
+                        block_surface = plataform_tile_map[tile_char]
+
+                        # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
+                        if tile_char == ":" or tile_char == "^":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 4 * TILE_SIZE)
+                        elif tile_char == ";" or tile_char == "/" or tile_char == "~":
+                            img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 2 * TILE_SIZE))
+                            size = pygame.math.Vector2(2 * TILE_SIZE, 2 * TILE_SIZE)
+                        elif tile_char == "|" or tile_char == "J":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                        else:
+                            img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
+                            size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+                            
+                        position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                        platforms.append(Platform(position, size, img))
 
         return platforms
 
     def _load_decorations(self):
         decorations = []
 
-        decoration_tile_map = {
-            "a": self.get_sprite(self.tileset, 9, 10, 16),  # tile_WEEDS_1
-            "b": self.get_sprite(self.tileset, 10, 10, 16),  # tile_WEEDS_2
-            "c": self.get_sprite(self.tileset, 11, 10, 16),  # tile_WEEDS_3
+        if(LEVEL == 1):       
+            decoration_tile_map = {
+                "a": self.get_sprite(self.tileset, 9, 10, 16),  # tile_WEEDS_1
+                "b": self.get_sprite(self.tileset, 10, 10, 16),  # tile_WEEDS_2
+                "c": self.get_sprite(self.tileset, 11, 10, 16),  # tile_WEEDS_3
 
-            "d": self.get_sprite(self.tileset, 11, 12, 16),  # tile_FLOWERS_1
-            "e": self.get_sprite(self.tileset, 11, 13, 16),  # tile_FLOWERS_2
-            
-            "$": self.get_sprite(self.tileset, 9, 14, 16),
+                "d": self.get_sprite(self.tileset, 11, 12, 16),  # tile_FLOWERS_1
+                "e": self.get_sprite(self.tileset, 11, 13, 16),  # tile_FLOWERS_2
+                
+                "$": self.get_sprite(self.tileset, 9, 14, 16),
 
-            "(": self.get_sprite(self.tileset, 16, 10, 16),  # tile_BLOCK_LAMP_1
-            ")": self.get_sprite(self.tileset, 17, 12, 16),  # tile_BLOCK_LAMP_2
+                "(": self.get_sprite(self.tileset, 16, 10, 16),  # tile_BLOCK_LAMP_1
+                ")": self.get_sprite(self.tileset, 17, 12, 16),  # tile_BLOCK_LAMP_2
 
-            "f": self._make_decoration_block_auto((9, 11), 3, 1),
-            "/": self._make_decoration_block_auto((21, 31), 3, 1),
+                "f": self._make_decoration_block_auto((9, 11), 3, 1),
+                "/": self._make_decoration_block_auto((21, 31), 3, 1),
 
-            "@": self._make_decoration_block_auto((10, 35), 8, 4), # tile_block_WALLS
-            "#": self._make_decoration_block_auto((0, 31), 10, 2), # tile_block_ROOF
-            "!": self._make_decoration_block_auto((17, 23), 4, 4), # tile_block_POÇO
+                "@": self._make_decoration_block_auto((10, 35), 8, 4), # tile_block_WALLS
+                "#": self._make_decoration_block_auto((0, 31), 10, 2), # tile_block_ROOF
+                "!": self._make_decoration_block_auto((17, 23), 4, 4), # tile_block_POÇO
 
-            "%": self._make_decoration_block_auto((44, 29), 3, 4), # tile_block_TREE-1
-            "*": self._make_decoration_block_auto((43, 33), 3, 3), # tile_block_LOG
-        }
+                "%": self._make_decoration_block_auto((44, 29), 3, 4), # tile_block_TREE-1
+                "*": self._make_decoration_block_auto((43, 33), 3, 3), # tile_block_LOG
+            }
 
-        for y, row in enumerate(self.map):
-            for x, tile_char in enumerate(row):
-                if tile_char in decoration_tile_map:
-                    block_surface = decoration_tile_map[tile_char]
+            for y, row in enumerate(self.map):
+                for x, tile_char in enumerate(row):
+                    if tile_char in decoration_tile_map:
+                        block_surface = decoration_tile_map[tile_char]
 
-                    # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
-                    if tile_char == "@":
-                        img = pygame.transform.scale(block_surface, (8 * TILE_SIZE, 4 * TILE_SIZE))
-                        size = pygame.math.Vector2(8 * TILE_SIZE, 4 * TILE_SIZE)
-                    elif tile_char == "#":
-                        img = pygame.transform.scale(block_surface, (10 * TILE_SIZE, 2 * TILE_SIZE))
-                        size = pygame.math.Vector2(10 * TILE_SIZE, 2 * TILE_SIZE)
-                    elif tile_char == "f":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
-                    elif tile_char == "/":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
-                    elif tile_char == "%":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 4 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 4 * TILE_SIZE)
-                    elif tile_char == "*":
-                        img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 3 * TILE_SIZE))
-                        size = pygame.math.Vector2(3 * TILE_SIZE, 3 * TILE_SIZE)
-                    elif tile_char == "!":
-                        img = pygame.transform.scale(block_surface, (4 * TILE_SIZE, 4 * TILE_SIZE))
-                        size = pygame.math.Vector2(4 * TILE_SIZE, 4 * TILE_SIZE)
-                    else:
-                        img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
-                        size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+                        # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
+                        if tile_char == "@":
+                            img = pygame.transform.scale(block_surface, (8 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(8 * TILE_SIZE, 4 * TILE_SIZE)
+                        elif tile_char == "#":
+                            img = pygame.transform.scale(block_surface, (10 * TILE_SIZE, 2 * TILE_SIZE))
+                            size = pygame.math.Vector2(10 * TILE_SIZE, 2 * TILE_SIZE)
+                        elif tile_char == "f":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                        elif tile_char == "/":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                        elif tile_char == "%":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 4 * TILE_SIZE)
+                        elif tile_char == "*":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 3 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 3 * TILE_SIZE)
+                        elif tile_char == "!":
+                            img = pygame.transform.scale(block_surface, (4 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(4 * TILE_SIZE, 4 * TILE_SIZE)
+                        else:
+                            img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
+                            size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
 
-                    position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
-                    decorations.append(Decoration(position, size, img))
+                        position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                        decorations.append(Decoration(position, size, img))
+
+        if(LEVEL == 2):       
+            decoration_tile_map = {
+                "!": self._make_decoration_block_auto((15, 9), 1, 2), # tile_FLOWER-1
+
+                "@": self._make_decoration_block_auto((14, 15), 2, 4), # tile_block_FRAME-1
+                "#": self._make_decoration_block_auto((16, 15), 2, 4), # tile_block_FRAME-2
+                "-": self._make_decoration_block_auto((25, 1), 2, 2), # tile_block_FRAME-4
+
+                "%": self._make_decoration_block_auto((2, 43), 2, 3), # tile_block_DOOR
+
+                "V": self._make_decoration_block_auto((18, 45), 2, 2), # tile_block_WINDOWS-1
+                "W": self._make_decoration_block_auto((20, 45), 2, 2), # tile_block_WINDOWS-2
+                "X": self._make_decoration_block_auto((18, 47), 2, 2), # tile_block_WINDOWS-3
+
+                "¨": self._make_decoration_block_auto((32, 14), 2, 1),  # tile_block_BED-DECORATION
+
+                "z": self._make_decoration_block_auto((16, 10), 1, 2),  # tile_block_LAMP
+                "<": self.get_sprite(self.tileset, 18, 12, 16),  # tile_LAMP-2
+
+                ")": self.get_sprite(self.tileset, 14, 24, 16),  # tile_UNDERGROUND_PLANT-0
+                "*": self.get_sprite(self.tileset, 14, 23, 16),  # tile_UNDERGROUND_PLANT-1
+                "&": self.get_sprite(self.tileset, 15, 26, 16),  # tile_UNDERGROUND_PLANT-2
+                "(": self.get_sprite(self.tileset, 16, 23, 16),  # tile_UNDERGROUND_PLANT-3
+
+                "j": self.get_sprite(self.tileset, 24, 2, 16),  # tile_HOUSE_PLANT-1
+                "k": self.get_sprite(self.tileset, 22, 2, 16),  # tile_HOUSE_PLANT-2
+                "l": self.get_sprite(self.tileset, 23, 2, 16),  # tile_HOUSE_PLANT-3
+
+                "x": self.get_sprite(self.tileset, 21, 24, 16),  # tile_POTION-1
+                "y": self.get_sprite(self.tileset, 22, 24, 16),  # tile_POTION-2
+
+                "´": self._make_decoration_block_auto((31, 7), 3, 1),  # tile_block_CARPET
+                "m": self._make_decoration_block_auto((29, 4), 5, 1),  # tile_block_CARPET-2
+
+                "ç": self._make_decoration_block_auto((21, 1), 1, 2),  # tile_block_SIGN
+                
+            }
+
+            for y, row in enumerate(self.map):
+                for x, tile_char in enumerate(row):
+                    if tile_char in decoration_tile_map:
+                        block_surface = decoration_tile_map[tile_char]
+
+                        # Verifica se é o bloco 3x3 (ou outro maior que 1 tile)
+                        if tile_char == "@" or tile_char == "#" or tile_char == "$":
+                            img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 4 * TILE_SIZE))
+                            size = pygame.math.Vector2(2 * TILE_SIZE, 4 * TILE_SIZE)
+                        elif tile_char == "%":
+                            img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 3 * TILE_SIZE))
+                            size = pygame.math.Vector2(2 * TILE_SIZE, 3 * TILE_SIZE)
+                        elif tile_char == "!" or tile_char == "z" or tile_char == "ç":
+                            img = pygame.transform.scale(block_surface, (1 * TILE_SIZE, 2 * TILE_SIZE))
+                            size = pygame.math.Vector2(1 * TILE_SIZE, 2 * TILE_SIZE)
+                        elif tile_char == "-" or tile_char == "V" or tile_char == "W" or tile_char == "X":
+                            img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 2 * TILE_SIZE))
+                            size = pygame.math.Vector2(2 * TILE_SIZE, 2 * TILE_SIZE)
+                        elif tile_char == "¨":
+                            img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(2 * TILE_SIZE, 1 * TILE_SIZE)
+                        elif tile_char == "´":
+                            img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                        elif tile_char == "m":
+                            img = pygame.transform.scale(block_surface, (5 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(5 * TILE_SIZE, 1 * TILE_SIZE)
+                        else:
+                            img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
+                            size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
+
+                        position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                        decorations.append(Decoration(position, size, img))
 
         return decorations
 
@@ -818,10 +1226,32 @@ class GameWorld:
         except:
             self.door_sound = None
 
+    def _load_moving_block_sound(self):
+        """Carrega o som para quando um bloco/controlado se move (ativação de botão)"""
+        try:
+            base_path = os.path.dirname(__file__)
+            sound_path = os.path.join(base_path, '..', 'resources', 'sounds', 'moving_block.mp3')
+            self.moving_block_sound = pygame.mixer.Sound(sound_path)
+            self.moving_block_sound.set_volume(0.7)
+        except:
+            # Tentar alternativa .wav caso mp3 não seja aceito pelo mixer
+            try:
+                sound_path = os.path.join(base_path, '..', 'resources', 'sounds', 'moving_block.wav')
+                self.moving_block_sound = pygame.mixer.Sound(sound_path)
+                self.moving_block_sound.set_volume(0.7)
+            except:
+                self.moving_block_sound = None
+
     def _load_background_music(self):
         base_path = os.path.dirname(__file__)
-        music_path = os.path.join(
-            base_path, '..', 'resources', 'sounds', 'background_sound.mp3')
+
+        if(LEVEL == 1): 
+            music_path = os.path.join(
+                base_path, '..', 'resources', 'sounds', 'background_sound_1.mp3')
+        
+        if(LEVEL == 2): 
+            music_path = os.path.join(
+                base_path, '..', 'resources', 'sounds', 'background_sound_2.mp3')
 
         pygame.mixer.music.load(music_path)
         pygame.mixer.music.set_volume(0.3)
@@ -845,3 +1275,78 @@ class GameWorld:
             'run_right': fake_gif,
             'run_left': fake_gif
         }
+
+    # === MÉTODOS DE GERENCIAMENTO DE ÁREAS SECRETAS ===
+    
+    def add_secret_area(self, x, y, width, height, color_hex):
+
+        secret_area = SecretArea(x, y, width, height, color_hex)
+        self.secret_areas.append(secret_area)
+        print(f"Nova área secreta adicionada em ({x}, {y}) com tamanho {width}x{height}")
+        return secret_area
+    
+    def remove_secret_area(self, index):
+
+        if 0 <= index < len(self.secret_areas):
+            removed_area = self.secret_areas.pop(index)
+            print(f"Área secreta removida: {removed_area.get_info()}")
+            return True
+        return False
+    
+    def remove_secret_area_at_position(self, x, y):
+
+        removed_count = 0
+        self.secret_areas = [area for area in self.secret_areas 
+                           if not area.rect.collidepoint(x, y)]
+        
+        if removed_count > 0:
+            print(f"Removidas {removed_count} áreas secretas na posição ({x}, {y})")
+        
+        return removed_count
+    
+    def get_secret_areas_info(self):
+
+        return [area.get_info() for area in self.secret_areas]
+    
+    def clear_all_secret_areas(self):
+        
+        count = len(self.secret_areas)
+        self.secret_areas.clear()
+        print(f"Todas as {count} áreas secretas foram removidas")
+
+    # === MÉTODOS DE GERENCIAMENTO DE PLACAS DE PRESSÃO ===
+    
+    def add_pressure_plate(self, x, y, plate_id, sprite_inactive, sprite_active):
+
+        plate = PressurePlate(
+            position=pygame.math.Vector2(x, y),
+            size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+            plate_id=plate_id,
+            sprite_inactive=sprite_inactive,
+            sprite_active=sprite_active
+        )
+        self.pressure_plates.append(plate)
+        print(f"Placa de pressão '{plate_id}' adicionada em ({x}, {y})")
+        return plate
+    
+    def add_controlled_block(self, x, y, plate_id, block_type, sprite_normal, sprite_disabled=None):
+
+        block = ControlledBlock(
+            position=pygame.math.Vector2(x, y),
+            size=pygame.math.Vector2(TILE_SIZE, TILE_SIZE),
+            pressure_plate_id=plate_id,
+            block_type=block_type,
+            sprite_normal=sprite_normal,
+            sprite_disabled=sprite_disabled
+        )
+        self.controlled_blocks.append(block)
+        print(f"Bloco controlado adicionado em ({x}, {y}) para placa '{plate_id}'")
+        return block
+    
+    def get_pressure_plate_info(self):
+        """Retorna informações de debug das placas de pressão"""
+        return [plate.get_info() for plate in self.pressure_plates]
+    
+    def get_controlled_blocks_info(self):
+        """Retorna informações de debug dos blocos controlados"""
+        return [block.get_info() for block in self.controlled_blocks]
