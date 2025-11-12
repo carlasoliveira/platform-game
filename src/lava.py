@@ -14,19 +14,16 @@ class Lava(ObjectStatic):
 
     def render(self, screen):
         pos = self.get_position()
-        
-        # Use animated gif if available
+
         if self.animated_gif:
             current_frame = self.animated_gif.get_current_frame()
             if current_frame:
                 screen.blit(current_frame, (int(pos.x), int(pos.y)))
                 return
-                
-        # Fallback to static image
+
         if self.image:
             screen.blit(self.image, (int(pos.x), int(pos.y)))
         else:
-            # Fallback to colored rectangle
             size = self.get_size()
             center = pos + (size / 2.0)
             rect = pygame.Rect(
@@ -35,5 +32,5 @@ class Lava(ObjectStatic):
                 int(size.x),
                 int(size.y)
             )
-            pygame.draw.rect(screen, (255, 50, 0), rect)  # Orange-red for lava
+            pygame.draw.rect(screen, (255, 50, 0), rect)
     
