@@ -13,94 +13,19 @@ from puzze import Puzze, PuzzleType, PressurePlate
 from controlledBlock import ControlledBlock, ControlledBlockType
 from secretArea import SecretArea
 
+LEVEL = 2
 
 class GameWorld:
     def __init__(self, screen):
         self.screen = screen
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
-        '''
-        self.map = [
-            "2..................................40000",
-            "2.................................470000",
-            "2........#.......................4700000",
-            "2................................1000000",
-            "2.....%...@..........!...........100YY00",
-            "2...........HI...................10Z(.X0",
-            "2...........FG...................XZ.)..1",
-            "2........d.wDE../...$..a./.....B.....K.1",
-            "2s...W33333333333333333333335.b........1",
-            "65....XYYYY00000000000000000633335L43337",
-            "02.........XYYYYYYYYYYYYYY00000000000000",
-            "02e.......................XY000000YYYY00",
-            "065.........................1000YZ....X0",
-            "002b.........B.......%.......XYZ.......1",
-            "0065a......a.cb.....................awe1",
-            "000635....W333333U..........B......W3330",
-            "00YYYZ....XYYYYYZ....bd.e....a......XYY0",
-            "0Z..................43335..4335d.......1",
-            "2...................XYYYZ..XYYYU.......1",
-            "2......................................1",
-            "2as.........*......................f...1",
-            "635.............f...ab.........a..433337",
-            "002d........w..43333335..bse.43333700000",
-            "00635LLLLLL43337000000633333370000000000",
-        ]
-        '''
 
-        self.map = [
-            "0000000000000000000000000000000000000000",
-            "0d7777777777777777777c000d777777777777c0",
-            "05...................40005............40",
-            "05....@..$..#........67778......-...wp40",
-            "05...........................X.....^..40",
-            "05...............HI...................40",
-            "05..B............FG......~.j.....¨s...40",
-            "05...............DE........p.´K.|.....40",
-            "0b222223.......12222222222222222222222a0",
-            "0d777778.......6777777777777c00000000000",
-            "05..........................40d77777c000",
-            "05....................V.....4d8.....67c0",
-            "05..%.......................68........40",
-            "05!...................................40",
-            "05....................................40",
-            "0b222223........1222222223..12222223..40",
-            "0P777778........6777777778..670d7778..40",
-            "0S...z..................z....pR5......40",
-            "0S.........................:..R5w....p40",
-            "0S...................w...&....R5p..:..40",
-            "0Sx.........*).....y*/...;....R5/.s...40",
-            "0NU.....*.( TQU...*TU)&p).)&.*R5..p...40",
-            "00NQQQQQQQQQM0SLLLTMNQQQQQQQQQMb223...40",
-            "00000000000000NQQQM000000000000000b222a0",
-        ]
+        # Selecionar mapa principal com base na variável global LEVEL
+        self.map = self.mapSelect()
 
-        self.controlled_map = [
-            "........................................",
-            "........................................",
-            "........................................",
-            "........................................",
-            "........................................",
-            "........................................",
-            "........................................",
-            "........................................",
-            "........h...............................",
-            "........i3..............................",
-            "........4b3.............................",
-            "........40b3............................",
-            "........400b3...........................",
-            "........4000b3..........................",
-            "........40000b3.................Q.......",
-            "........400000b3....................AB..",
-            "........67777778....................CD..",
-            "........................................",
-            "........................................",
-            "........................................",
-            "........................................",
-            ".....P..................................",
-            "........................................",
-            "........................................",
-        ]
+        # Selecionar mapa controlado com base na variável global LEVEL
+        self.controlled_map = self.mapControlledSelect()
 
         self.background = self._load_background()
         self.tileset = self._load_tileset()
@@ -135,9 +60,14 @@ class GameWorld:
 
         # Carrega sons
         self._load_door_sound()
+        # Som de bloco em movimento/controle
+        self._load_moving_block_sound()
+
+        # Inicializar posições dos jogadores a partir do mapping por LEVEL
+        spawn1, spawn2 = self.spawnSelect()
 
         self.player1 = Player(
-            position=pygame.math.Vector2(120, 420),
+            position=pygame.math.Vector2(spawn1[0], spawn1[1]),
             sprites=self.player_sprites2,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
@@ -146,13 +76,14 @@ class GameWorld:
         )
 
         self.player2 = Player(
-            position=pygame.math.Vector2(180, 420),
+            position=pygame.math.Vector2(spawn2[0], spawn2[1]),
             sprites=self.player_sprites,
             velocity=pygame.math.Vector2(0, 0),
             size=pygame.math.Vector2(24, 40),
             my_keys=[pygame.K_a, pygame.K_d, pygame.K_w],
             player_type="player2"
         )
+
         base_path = os.path.dirname(__file__)
         font_path = os.path.join(
             base_path, '..', 'resources', 'font', 'PotatoFont.ttf')
@@ -203,6 +134,104 @@ class GameWorld:
 
         # Verifica se alguma caixa (puzzle) caiu na lava
         self._check_puzzle_lava_collision()
+
+    # === Selectors baseados em LEVEL ===
+    def mapSelect(self):
+
+        if(LEVEL == 1):
+            return [
+                "2..................................40000",
+                "2.................................470000",
+                "2........#.......................4700000",
+                "2................................1000000",
+                "2.....%...@..........!...........100YY00",
+                "2...........HI...................10Z(.X0",
+                "2...........FG...................XZ.)..1",
+                "2........d.wDE../...$..a./.....B.....K.1",
+                "2s...W33333333333333333333335.b........1",
+                "65....XYYYY00000000000000000633335L43337",
+                "02.........XYYYYYYYYYYYYYY00000000000000",
+                "02e.......................XY000000YYYY00",
+                "065.........................1000YZ....X0",
+                "002b.........B.......%.......XYZ.......1",
+                "0065a......a.cb.....................awe1",
+                "000635....W333333U..........B......W3330",
+                "00YYYZ....XYYYYYZ....bd.e....a......XYY0",
+                "0Z..................43335..4335d.......1",
+                "2...................XYYYZ..XYYYU.......1",
+                "2......................................1",
+                "2as.........*......................f...1",
+                "635.............f...ab.........a..433337",
+                "002d........w..43333335..bse.43333700000",
+                "00635LLLLLL43337000000633333370000000000",
+        ]
+
+        if(LEVEL == 2):
+            return [
+                "0000000000000000000000000000000000000000",
+                "00d777777777777777777c000d777777777777c0",
+                "005...<........<.....40005.....<......40",
+                "005.....@...#........67778......-...wp40",
+                "005..........................X.....^..40",
+                "005..............HI...................40",
+                "005..B...........FG......~.j.....¨s...40",
+                "005..............DE....pp..p.´K.|.....40",
+                "00b22223......122222222222222222222222a0",
+                "0d777778......6777777777777c000000000000",
+                "05..<...............<......6777777777c00",
+                "05.....................V.............6c0",
+                "05..%.........................l.......40",
+                "05!.................k........~.13.....40",
+                "05................mJ....s......45.....40",
+                "0b222223........1222222223..122ab223..40",
+                "00P77778........6777777778..670d7778..40",
+                "00S..z..................z....pR5......40",
+                "00S........................:..R5w....p40",
+                "00S..........ç.......w...&....R5p..:..40",
+                "00Sx........*).....y*/...;....R5/.s...40",
+                "00NU....*.( TQU...*TU)&p).)&.*R5..p...40",
+                "000NQQQQQQQQM0SLLLTMNQQQQQQQQQMb223...40",
+                "00000000000000NQQQM000000000000000b222a0",
+            ]
+
+    def mapControlledSelect(self):
+
+        if(LEVEL == 2):
+            return [
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........h...............................",
+                "........i3..............................",
+                "........4b3.............................",
+                "........40b3...................WX.......",
+                "........400b3..................YZ.......",
+                "........4000b3..........................",
+                "........40000b3...................Q.....",
+                "........400000b3....................AB..",
+                "........67777778....................CD..",
+                "........................................",
+                "........................................",
+                "........................................",
+                "........................................",
+                ".....P..................................",
+                "........................................",
+                "........................................",
+            ]
+        return []
+
+    def spawnSelect(self):
+
+        if(LEVEL == 1):
+            return (650, 620), (568, 620)
+
+        if(LEVEL == 2):
+            return (120, 420), (180, 420)
 
     def _check_door_interactions(self):
         """Verifica se algum jogador tocou na porta e abre se tiver a chave"""
@@ -406,6 +435,12 @@ class GameWorld:
             if state_changed:
                 # Se o estado mudou, atualizar blocos controlados
                 self._update_controlled_blocks_for_plate(plate.get_plate_id(), plate.is_active())
+                # Tocar som de bloco/movimento quando a placa muda de estado (ativa/desativa)
+                try:
+                    if hasattr(self, 'moving_block_sound') and self.moving_block_sound:
+                        self.moving_block_sound.play()
+                except Exception:
+                    pass
     
     def _update_controlled_blocks_for_plate(self, plate_id, is_active):
         """Atualiza blocos controlados por uma placa específica"""
@@ -588,13 +623,11 @@ class GameWorld:
 
     def _load_background(self):
         base_path = os.path.dirname(__file__)
-        
-        level = 2  # Define o nível atual (2)
 
-        if(level == 1):
+        if(LEVEL == 1):
             bg_path = os.path.join(base_path, '..', 'resources',
                                 'graphics', 'background.png')
-        if(level == 2):
+        if(LEVEL == 2):
             bg_path = os.path.join(base_path, '..', 'resources',
                                 'graphics', 'background2.png')
         bg = pygame.image.load(bg_path)
@@ -643,14 +676,11 @@ class GameWorld:
 
     def _load_secret_areas(self):
         secret_areas = []
-        
-        level = 2
             
-        if(level == 2):
+        if(LEVEL == 2):
             
             #secret_areas.append(SecretArea(50, 489, 920, 255, '#0F0B0D'))
-
-            secret_areas.append(SecretArea(904, 340, 323, 157, '#0F0B0D'))
+            secret_areas.append(SecretArea(1000, 340, 227, 157, '#0F0B0D'))
             secret_areas.append(SecretArea(1010, 490, 217, 255, '#0F0B0D')) 
             
         return secret_areas
@@ -658,10 +688,8 @@ class GameWorld:
     def _load_pressure_plates(self):
 
         pressure_plates = []
-        
-        level = 2  # Define o nível atual (2)
             
-        if(level == 2):
+        if(LEVEL == 2):
 
             sprite_inactive = self.get_sprite(self.tileset, 30, 2, 16)
             sprite_active = self.get_sprite(self.tileset, 31, 2, 16)
@@ -694,10 +722,8 @@ class GameWorld:
     def _load_controlled_blocks(self):
         """Carrega blocos controlados da matriz controlled_map"""
         controlled_blocks = []
-        
-        level = 2  # Define o nível atual (2)
             
-        if(level == 2):
+        if(LEVEL == 2):
 
             block_chars = {
             
@@ -713,6 +739,11 @@ class GameWorld:
                 "b": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (20, 40)), # tile_WOODS_CORNER_TOP_RIGHT
                 "h": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (23, 40)), # tile_WOODS_STAIRS_AJUST-1
                 "i": ('plate1', ControlledBlockType.APPEAR_WHEN_ACTIVE, (23, 41)), # tile_WOODS_STAIRS_AJUST-2
+
+                "W": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 39)), # tile_WOODS_TOP_LEFT
+                "X": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 39)), # tile_WOODS_TOP_RIGHT
+                "Y": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 41)), # tile_WOODS_BOT_LEFT
+                "Z": ('plate1', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 41)), # tile_WOODS_BOT_RIGHT
 
                 "A": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (0, 39)), # tile_WOODS_TOP_LEFT
                 "B": ('plate2', ControlledBlockType.DISAPPEAR_WHEN_ACTIVE, (2, 39)), # tile_WOODS_TOP_RIGHT
@@ -805,9 +836,7 @@ class GameWorld:
     def _load_platforms(self):
         platforms = []
 
-        level = 2  # Define o nível atual (2)
-
-        if(level == 1):
+        if(LEVEL == 1):
             plataform_tile_map = {
                 "0": self.get_sprite(self.tileset, 1, 8, 16), # tile_DIRT
                 "1": self.get_sprite(self.tileset, 0, 8, 16), # tile_DIRT_EDGE_LEFT
@@ -830,7 +859,7 @@ class GameWorld:
                 "Z": self.get_sprite(self.tileset, 2, 9, 16), # tile_DIRT_BOTTOM_right
             }
 
-        if(level == 2):
+        if(LEVEL == 2):
             plataform_tile_map = {
                 "0": self.get_sprite(self.tileset, 1, 40, 16), # tile_DIRT
 
@@ -878,8 +907,12 @@ class GameWorld:
                 "~": self._make_decoration_block_auto((28,6), 2, 2), # tile_BLOCK_BOOKSHELF-5
 
                 "|": self._make_decoration_block_auto((31,15), 3, 1), # tile_BLOCK_BED
+
+                "J": self._make_decoration_block_auto((26,16), 3, 1), # tile_BLOCK_TABLE
             }
 
+        # Build platforms if a tile map for platforms was defined for the current level
+        if 'plataform_tile_map' in locals():
             for y, row in enumerate(self.map):
                 for x, tile_char in enumerate(row):
                     if tile_char in plataform_tile_map:
@@ -892,7 +925,7 @@ class GameWorld:
                         elif tile_char == ";" or tile_char == "/" or tile_char == "~":
                             img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 2 * TILE_SIZE))
                             size = pygame.math.Vector2(2 * TILE_SIZE, 2 * TILE_SIZE)
-                        elif tile_char == "|":
+                        elif tile_char == "|" or tile_char == "J":
                             img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
                             size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
                         else:
@@ -907,9 +940,7 @@ class GameWorld:
     def _load_decorations(self):
         decorations = []
 
-        level = 2  # Define o nível atual (2)
-
-        if(level == 1):       
+        if(LEVEL == 1):       
             decoration_tile_map = {
                 "a": self.get_sprite(self.tileset, 9, 10, 16),  # tile_WEEDS_1
                 "b": self.get_sprite(self.tileset, 10, 10, 16),  # tile_WEEDS_2
@@ -968,13 +999,12 @@ class GameWorld:
                         position = pygame.math.Vector2(x * TILE_SIZE, y * TILE_SIZE)
                         decorations.append(Decoration(position, size, img))
 
-        if(level == 2):       
+        if(LEVEL == 2):       
             decoration_tile_map = {
                 "!": self._make_decoration_block_auto((15, 9), 1, 2), # tile_FLOWER-1
 
                 "@": self._make_decoration_block_auto((14, 15), 2, 4), # tile_block_FRAME-1
                 "#": self._make_decoration_block_auto((16, 15), 2, 4), # tile_block_FRAME-2
-                "$": self._make_decoration_block_auto((20, 15), 2, 4), # tile_block_FRAME-3
                 "-": self._make_decoration_block_auto((25, 1), 2, 2), # tile_block_FRAME-4
 
                 "%": self._make_decoration_block_auto((2, 43), 2, 3), # tile_block_DOOR
@@ -986,6 +1016,7 @@ class GameWorld:
                 "¨": self._make_decoration_block_auto((32, 14), 2, 1),  # tile_block_BED-DECORATION
 
                 "z": self._make_decoration_block_auto((16, 10), 1, 2),  # tile_block_LAMP
+                "<": self.get_sprite(self.tileset, 18, 12, 16),  # tile_LAMP-2
 
                 ")": self.get_sprite(self.tileset, 14, 24, 16),  # tile_UNDERGROUND_PLANT-0
                 "*": self.get_sprite(self.tileset, 14, 23, 16),  # tile_UNDERGROUND_PLANT-1
@@ -993,11 +1024,17 @@ class GameWorld:
                 "(": self.get_sprite(self.tileset, 16, 23, 16),  # tile_UNDERGROUND_PLANT-3
 
                 "j": self.get_sprite(self.tileset, 24, 2, 16),  # tile_HOUSE_PLANT-1
+                "k": self.get_sprite(self.tileset, 22, 2, 16),  # tile_HOUSE_PLANT-2
+                "l": self.get_sprite(self.tileset, 23, 2, 16),  # tile_HOUSE_PLANT-3
 
                 "x": self.get_sprite(self.tileset, 21, 24, 16),  # tile_POTION-1
                 "y": self.get_sprite(self.tileset, 22, 24, 16),  # tile_POTION-2
 
                 "´": self._make_decoration_block_auto((31, 7), 3, 1),  # tile_block_CARPET
+                "m": self._make_decoration_block_auto((29, 4), 5, 1),  # tile_block_CARPET-2
+
+                "ç": self._make_decoration_block_auto((21, 1), 1, 2),  # tile_block_SIGN
+                
             }
 
             for y, row in enumerate(self.map):
@@ -1012,7 +1049,7 @@ class GameWorld:
                         elif tile_char == "%":
                             img = pygame.transform.scale(block_surface, (2 * TILE_SIZE, 3 * TILE_SIZE))
                             size = pygame.math.Vector2(2 * TILE_SIZE, 3 * TILE_SIZE)
-                        elif tile_char == "!" or tile_char == "z":
+                        elif tile_char == "!" or tile_char == "z" or tile_char == "ç":
                             img = pygame.transform.scale(block_surface, (1 * TILE_SIZE, 2 * TILE_SIZE))
                             size = pygame.math.Vector2(1 * TILE_SIZE, 2 * TILE_SIZE)
                         elif tile_char == "-" or tile_char == "V" or tile_char == "W" or tile_char == "X":
@@ -1024,6 +1061,9 @@ class GameWorld:
                         elif tile_char == "´":
                             img = pygame.transform.scale(block_surface, (3 * TILE_SIZE, 1 * TILE_SIZE))
                             size = pygame.math.Vector2(3 * TILE_SIZE, 1 * TILE_SIZE)
+                        elif tile_char == "m":
+                            img = pygame.transform.scale(block_surface, (5 * TILE_SIZE, 1 * TILE_SIZE))
+                            size = pygame.math.Vector2(5 * TILE_SIZE, 1 * TILE_SIZE)
                         else:
                             img = pygame.transform.scale(block_surface, (TILE_SIZE, TILE_SIZE))
                             size = pygame.math.Vector2(TILE_SIZE, TILE_SIZE)
@@ -1148,10 +1188,32 @@ class GameWorld:
         except:
             self.door_sound = None
 
+    def _load_moving_block_sound(self):
+        """Carrega o som para quando um bloco/controlado se move (ativação de botão)"""
+        try:
+            base_path = os.path.dirname(__file__)
+            sound_path = os.path.join(base_path, '..', 'resources', 'sounds', 'moving_block.mp3')
+            self.moving_block_sound = pygame.mixer.Sound(sound_path)
+            self.moving_block_sound.set_volume(0.7)
+        except:
+            # Tentar alternativa .wav caso mp3 não seja aceito pelo mixer
+            try:
+                sound_path = os.path.join(base_path, '..', 'resources', 'sounds', 'moving_block.wav')
+                self.moving_block_sound = pygame.mixer.Sound(sound_path)
+                self.moving_block_sound.set_volume(0.7)
+            except:
+                self.moving_block_sound = None
+
     def _load_background_music(self):
         base_path = os.path.dirname(__file__)
-        music_path = os.path.join(
-            base_path, '..', 'resources', 'sounds', 'background_sound.mp3')
+
+        if(LEVEL == 1): 
+            music_path = os.path.join(
+                base_path, '..', 'resources', 'sounds', 'background_sound_1.mp3')
+        
+        if(LEVEL == 2): 
+            music_path = os.path.join(
+                base_path, '..', 'resources', 'sounds', 'background_sound_2.mp3')
 
         pygame.mixer.music.load(music_path)
         pygame.mixer.music.set_volume(0.3)
