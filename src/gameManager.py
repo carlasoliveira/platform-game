@@ -25,33 +25,6 @@ class GameManager:
         self.running = True
         self.state = StateMachine.MENU
         self.last_time = pygame.time.get_ticks()
-<<<<<<< HEAD
-        self.world._load_background_music()
-        
-        self.score_written = False
-
-    def run(self):
-        while self.running:
-            self._handle_events()
-            delta_time = self._calculate_delta_time()
-            self._draw()
-            if self.world.game_over:
-                self.world._draw_game_over()
-            elif self.world.victory_achieved:
-                self.world._draw_victory()
-            else:
-                self.world.keyboard_events()
-                self.world.update(delta_time)
-                self.world.resolve_collisions()
-           
-            if (self.world.game_over or self.world.victory_achieved) and not self.score_written:
-                self.world.write_score()
-                self.score_written = True 
-
-            pygame.display.update()
-            self.world.clock.tick(60)
-            
-=======
         
         # Instanciação do Menu APENAS uma vez
         self.menu = Menu()
@@ -96,7 +69,6 @@ class GameManager:
                 pygame.display.update()
                 self.clock.tick(60)
 
->>>>>>> fb2c86d678be78ca61959e7c9703c9cfea02f81f
 
     def _handle_events(self):
 

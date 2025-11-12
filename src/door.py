@@ -1,5 +1,5 @@
 import pygame
-from Object import ObjectStatic
+from object import ObjectStatic
 
 class Door(ObjectStatic):
     def __init__(self, position, size, closed_image, open_image):

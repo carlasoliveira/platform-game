@@ -1,5 +1,5 @@
 import pygame
-from Object import ObjectStatic
+from object import ObjectStatic
 
 class Decoration(ObjectStatic):
     def __init__(self, position, size, image=None):

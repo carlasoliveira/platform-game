@@ -1,5 +1,5 @@
 import pygame as pg
-from Object import ObjectDynamic
+from object import ObjectDynamic
 from constants import gravity
 import os
 
