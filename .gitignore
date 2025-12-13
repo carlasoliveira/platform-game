@@ -4,3 +4,4 @@
 *.pyd
 pycache/
 src/Decoration.py
+src/decoration.py
